@@ -23,6 +23,17 @@ export default function QuickApplicationsBar({ onNavigate }: QuickApplicationsBa
       )
     },
     {
+      id: 'meeting-management',
+      name: 'MEETING',
+      subtitle: 'Réunions & Performance Industrielle',
+      icon: (
+        <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-md border border-indigo-700/10 relative">
+          MM
+          <span className="absolute top-1 right-1 text-[8px] font-bold">↗</span>
+        </div>
+      )
+    },
+    {
       id: 'rca',
       name: 'RCA',
       subtitle: 'Root Cause Analysis',
@@ -146,8 +157,8 @@ export default function QuickApplicationsBar({ onNavigate }: QuickApplicationsBa
         </h3>
       </div>
 
-      {/* Horizontal row of 8 cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+      {/* Applications connected and planned */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-4">
         {apps.map((app) => (
           <div
             key={app.name}
