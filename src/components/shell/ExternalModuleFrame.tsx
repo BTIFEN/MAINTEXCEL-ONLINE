@@ -66,7 +66,7 @@ export default function ExternalModuleFrame({
     <div className="relative min-h-[calc(100vh-170px)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm flex flex-col">
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#0B3C8F]" />
       
-      <div className="px-5 pt-5 flex justify-end">
+      <div className="relative z-20 px-5 pt-5 flex justify-end">
         <a href={baseUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-[#0B3C8F] hover:bg-blue-50">
           Ouvrir {moduleName} dans un nouvel onglet <ExternalLink className="w-4 h-4" />
         </a>
