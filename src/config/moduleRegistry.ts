@@ -1,6 +1,10 @@
 import { DOMAINS_CONFIG } from './domainsConfig';
 import type { ModuleDefinition } from '../types/shell';
 
+// Deployment target: same-origin /5s/ behind the MAINTeX server/reverse proxy.
+// Override only when 5S is intentionally hosted elsewhere.
+const fiveSAppUrl = import.meta.env.VITE_5S_APP_URL || '/5s/';
+
 const slugify = (value: string) =>
   value
     .normalize('NFD')
@@ -20,7 +24,7 @@ export const MODULE_REGISTRY: ModuleDefinition[] = DOMAINS_CONFIG.flatMap((domai
       domainId: domain.id,
       domainName: domain.name,
       status: is5S ? ('connected' as const) : ('planned' as const),
-      externalUrl: is5S ? import.meta.env.VITE_5S_APP_URL : undefined,
+      externalUrl: is5S ? fiveSAppUrl : undefined,
       route: `/app/${domain.id}/${slugify(submenu.name)}`,
     };
   })
@@ -56,7 +60,7 @@ export const QUICK_MODULES: ModuleDefinition[] = [
     subtitle: '5S Digital Management',
     status: 'connected',
     route: '/app/5s',
-    externalUrl: import.meta.env.VITE_5S_APP_URL,
+    externalUrl: fiveSAppUrl,
   },
   {
     id: 'quick.ma',
