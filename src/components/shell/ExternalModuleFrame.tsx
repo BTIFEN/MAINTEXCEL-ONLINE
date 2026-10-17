@@ -18,15 +18,10 @@ export default function ExternalModuleFrame({
     if (!baseUrl || baseUrl.trim() === '') return null;
 
     try {
-      const url = new URL(baseUrl);
+      const url = new URL(baseUrl, window.location.origin);
       url.searchParams.set('maintexMode', 'embedded');
       return url.toString();
     } catch {
-      // If it's a relative URL or simple path like http://localhost:5174
-      if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
-        const querySep = baseUrl.includes('?') ? '&' : '?';
-        return `${baseUrl}${querySep}maintexMode=embedded`;
-      }
       return null;
     }
   }, [baseUrl]);
