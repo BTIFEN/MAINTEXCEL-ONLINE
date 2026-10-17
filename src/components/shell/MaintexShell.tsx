@@ -39,14 +39,14 @@ export default function MaintexShell() {
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
-      const fiveSUrl = import.meta.env.VITE_5S_APP_URL;
+      const fiveSUrl = import.meta.env.VITE_5S_APP_URL || '/5s/';
       if (!fiveSUrl || fiveSUrl.trim() === '') {
         return; // Fail closed: missing URL
       }
 
       let allowedOrigin: string;
       try {
-        allowedOrigin = new URL(fiveSUrl).origin;
+        allowedOrigin = new URL(fiveSUrl, window.location.origin).origin;
       } catch {
         return; // Fail closed: invalid URL
       }
