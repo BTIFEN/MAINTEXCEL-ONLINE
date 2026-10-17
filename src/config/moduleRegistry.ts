@@ -29,11 +29,11 @@ export const MODULE_REGISTRY: ModuleDefinition[] = DOMAINS_CONFIG.flatMap((domai
 export const QUICK_MODULES: ModuleDefinition[] = [
   {
     id: 'quick.alpab',
-    label: 'ALPHAP',
-    subtitle: 'Pilotage ARMP — Maintenance industrielle',
+    label: 'ALPHAP Démo',
+    subtitle: 'Démonstration fictive sans login — application complète non connectée',
     status: 'connected',
     route: '/app/alphap',
-    externalUrl: 'https://alphap-500610893724.europe-west1.run.app',
+    externalUrl: 'https://alphap-demo-500610893724.europe-west1.run.app',
   },
   {
     id: 'quick.rca',
