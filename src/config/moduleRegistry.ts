@@ -3,7 +3,7 @@ import type { ModuleDefinition } from '../types/shell';
 
 // Deployment target: same-origin /5s/ behind the MAINTeX server/reverse proxy.
 // Override only when 5S is intentionally hosted elsewhere.
-const fiveSAppUrl = import.meta.env.VITE_5S_APP_URL || '/5s/';
+const fiveSAppUrl = import.meta.env.VITE_5S_APP_URL || 'https://5s.maintexcel.online/';
 
 const slugify = (value: string) =>
   value
