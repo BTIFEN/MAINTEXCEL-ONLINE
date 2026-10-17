@@ -1,0 +1,6 @@
+{
+  "name": "MAINTeX - Maintenance Excellence Platform",
+  "description": "Plateforme centrale unifiée pour le pilotage de la Maintenance Excellence (ALPHAP, RCA, 5S, Maintenance Autonome, Audits et Indicateurs de performance).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
