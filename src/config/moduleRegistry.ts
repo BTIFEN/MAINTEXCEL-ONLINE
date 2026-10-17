@@ -36,6 +36,14 @@ export const QUICK_MODULES: ModuleDefinition[] = [
     externalUrl: 'https://alphap-demo-500610893724.europe-west1.run.app',
   },
   {
+    id: 'quick.meeting-management',
+    label: 'MEETING MANAGEMENT',
+    subtitle: 'Réunions & Performance Industrielle',
+    status: 'connected',
+    route: '/app/meeting-management',
+    externalUrl: 'https://meeting-management-qbxmdrfhnq-ew.a.run.app',
+  },
+  {
     id: 'quick.rca',
     label: 'RCA',
     subtitle: 'Root Cause Analysis',
