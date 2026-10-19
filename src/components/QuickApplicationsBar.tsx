@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Lock } from 'lucide-react';
 
 interface QuickApplicationsBarProps {
   onNavigate?: (
@@ -8,14 +8,16 @@ interface QuickApplicationsBarProps {
     domainId?: string,
     subtitle?: string,
   ) => void;
+  /** Indique si la personne connectée peut ouvrir l'entrée (droits MAINTeX). */
+  canOpen?: (moduleId: string) => boolean;
 }
 
-export default function QuickApplicationsBar({ onNavigate }: QuickApplicationsBarProps) {
+export default function QuickApplicationsBar({ onNavigate, canOpen }: QuickApplicationsBarProps) {
   const apps = [
     {
       id: 'alpab',
-      name: 'ALPAB',
-      subtitle: 'Application ALPAB',
+      name: 'ALPHAP',
+      subtitle: 'Gestion des travaux de maintenance',
       icon: (
         <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-xl shadow-md border border-blue-700/10">
           A
@@ -159,25 +161,48 @@ export default function QuickApplicationsBar({ onNavigate }: QuickApplicationsBa
 
       {/* Applications connected and planned */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-4">
-        {apps.map((app) => (
-          <div
-            key={app.name}
-            onClick={() => handleAppClick(app)}
-            className="flex flex-col items-center justify-center p-3 bg-white border border-slate-100 hover:bg-blue-50/20 hover:border-blue-300 rounded-2xl transition-all duration-150 cursor-pointer group shadow-2xs relative"
-          >
-            <div className="shrink-0 transition-transform group-hover:scale-105 duration-200">
-              {app.icon}
+        {apps.map((app) => {
+          const locked = canOpen ? !canOpen(`quick.${app.id}`) : false;
+          return (
+            <div
+              key={app.name}
+              role="button"
+              tabIndex={0}
+              aria-disabled={locked}
+              title={locked ? 'Accès non accordé à votre profil' : undefined}
+              onClick={() => handleAppClick(app)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleAppClick(app);
+                }
+              }}
+              className={`flex flex-col items-center justify-center p-3 bg-white border rounded-2xl transition-all duration-150 group shadow-2xs relative ${
+                locked
+                  ? 'border-slate-100 opacity-50 grayscale cursor-not-allowed'
+                  : 'border-slate-100 hover:bg-blue-50/20 hover:border-blue-300 cursor-pointer'
+              }`}
+            >
+              <div className="shrink-0 transition-transform group-hover:scale-105 duration-200">
+                {app.icon}
+              </div>
+
+              <span className="text-xs font-bold text-slate-800 mt-2.5 tracking-tight truncate w-full text-center group-hover:text-blue-600 transition-colors">
+                {app.name}
+              </span>
+
+              {locked ? (
+                <span className="inline-flex items-center gap-1 text-[8px] font-extrabold mt-1.5 uppercase font-mono tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                  <Lock className="w-2.5 h-2.5" /> Restreint
+                </span>
+              ) : (
+                <span className="text-[8px] font-extrabold mt-1.5 uppercase font-mono tracking-wider text-blue-600 bg-blue-50/80 px-1.5 py-0.5 rounded">
+                  Ouvrir
+                </span>
+              )}
             </div>
-
-            <span className="text-xs font-bold text-slate-800 mt-2.5 tracking-tight truncate w-full text-center group-hover:text-blue-600 transition-colors">
-              {app.name}
-            </span>
-
-            <span className="text-[8px] font-extrabold mt-1.5 uppercase font-mono tracking-wider text-blue-600 bg-blue-50/80 px-1.5 py-0.5 rounded">
-              Ouvrir
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
     </div>

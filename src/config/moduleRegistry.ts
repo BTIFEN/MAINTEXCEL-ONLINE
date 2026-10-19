@@ -1,10 +1,17 @@
 import { DOMAINS_CONFIG } from './domainsConfig';
+import { NAVIGATION_TO_APP } from '../../shared/access.js';
 import type { ModuleDefinition } from '../types/shell';
+
+// Les adresses des applications et leur état (branchée ou prévue) ne sont plus
+// figés à la compilation : le serveur les fournit à la connexion (/api/auth/me),
+// ce qui permet de déplacer une application sans reconstruire MAINTeX.
+
+const navigationToApp = NAVIGATION_TO_APP as Record<string, string>;
 
 const slugify = (value: string) =>
   value
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '-')
@@ -12,87 +19,37 @@ const slugify = (value: string) =>
 
 export const MODULE_REGISTRY: ModuleDefinition[] = DOMAINS_CONFIG.flatMap((domain) =>
   domain.submenus.map((submenu) => {
-    const is5S = domain.id === 'excellence-terrain' && submenu.name === '5S';
+    const id = `${domain.id}.${slugify(submenu.name)}`;
     return {
-      id: `${domain.id}.${slugify(submenu.name)}`,
+      id,
       label: submenu.name,
       subtitle: submenu.subtitle,
       domainId: domain.id,
       domainName: domain.name,
-      status: is5S ? ('connected' as const) : ('planned' as const),
-      externalUrl: is5S ? import.meta.env.VITE_5S_APP_URL : undefined,
+      appId: navigationToApp[id],
       route: `/app/${domain.id}/${slugify(submenu.name)}`,
     };
-  })
+  }),
 );
 
+const quick = (id: string, label: string, subtitle: string, route: string): ModuleDefinition => ({
+  id,
+  label,
+  subtitle,
+  appId: navigationToApp[id],
+  route,
+});
+
 export const QUICK_MODULES: ModuleDefinition[] = [
-  {
-    id: 'quick.alpab',
-    label: 'ALPHAP',
-    subtitle: 'Maintenance ARMP — accès sécurisé Google',
-    status: import.meta.env.VITE_ALPHAP_APP_URL ? 'connected' : 'planned',
-    route: '/app/alphap',
-    externalUrl: import.meta.env.VITE_ALPHAP_APP_URL || undefined,
-  },
-  {
-    id: 'quick.meeting-management',
-    label: 'MEETING MANAGEMENT',
-    subtitle: 'Réunions & Performance Industrielle',
-    status: 'connected',
-    route: '/app/meeting-management',
-    externalUrl: 'https://meeting-management-qbxmdrfhnq-ew.a.run.app',
-  },
-  {
-    id: 'quick.rca',
-    label: 'RCA',
-    subtitle: 'Root Cause Analysis',
-    status: 'planned',
-    route: '/app/rca',
-  },
-  {
-    id: 'quick.5s',
-    label: '5S',
-    subtitle: '5S Digital Management',
-    status: 'connected',
-    route: '/app/5s',
-    externalUrl: import.meta.env.VITE_5S_APP_URL,
-  },
-  {
-    id: 'quick.ma',
-    label: 'MA',
-    subtitle: 'Maintenance Autonome',
-    status: 'planned',
-    route: '/app/maintenance-autonome',
-  },
-  {
-    id: 'quick.asset-criticity',
-    label: 'Asset Criticity',
-    subtitle: 'Criticité des équipements',
-    status: 'planned',
-    route: '/app/asset-criticity',
-  },
-  {
-    id: 'quick.fmea',
-    label: 'FMEA/MTA',
-    subtitle: 'Analyse des modes de défaillance',
-    status: 'planned',
-    route: '/app/fmea-mta',
-  },
-  {
-    id: 'quick.rcm',
-    label: 'RCM',
-    subtitle: 'Reliability Centered Maintenance',
-    status: 'planned',
-    route: '/app/rcm',
-  },
-  {
-    id: 'quick.cbm',
-    label: 'CBM',
-    subtitle: 'Condition Based Maintenance',
-    status: 'planned',
-    route: '/app/cbm',
-  },
+  quick('quick.alpab', 'ALPHAP', 'Gestion des travaux de maintenance', '/app/alphap'),
+  quick('quick.meeting-management', 'MEETING MANAGEMENT', 'Réunions & Performance Industrielle', '/app/meeting-management'),
+  quick('quick.rca', 'RCA', 'Root Cause Analysis', '/app/rca'),
+  quick('quick.5s', '5S', '5S Digital Management', '/app/5s'),
+  quick('quick.ma', 'MA', 'Maintenance Autonome', '/app/maintenance-autonome'),
+  quick('quick.asset-criticity', 'Asset Criticity', 'Criticité des équipements', '/app/asset-criticity'),
+  quick('quick.fmea', 'FMEA/MTA', 'Analyse des modes de défaillance', '/app/fmea-mta'),
+  quick('quick.rcm', 'RCM', 'Reliability Centered Maintenance', '/app/rcm'),
+  quick('quick.cbm', 'CBM', 'Condition Based Maintenance', '/app/cbm'),
 ];
 
 export const findModule = (moduleId: string) =>

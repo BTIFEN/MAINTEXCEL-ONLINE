@@ -6,12 +6,39 @@ import {
   Calendar, 
   Workflow,
   SlidersHorizontal,
-  Factory
+  Factory,
+  LogOut,
+  Shield
 } from 'lucide-react';
 
-export function MaintexHeaderLogo() {
+interface HeaderProps {
+  /** Retour à l'accueil MAINTeX, déclenché par un clic sur le logo. */
+  onHome?: () => void;
+  userName?: string;
+  roleLabel?: string;
+  isAdmin?: boolean;
+  onAdmin?: () => void;
+  onLogout?: () => void;
+}
+
+const initialsOf = (name: string) =>
+  name
+    .replace(/@.*/, '')
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || '?';
+
+export function MaintexHeaderLogo({ onClick }: { onClick?: () => void } = {}) {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div className="flex items-center gap-2.5">
+    <Tag
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      aria-label={onClick ? 'Retour à l’accueil MAINTeX' : undefined}
+      className={`flex items-center gap-2.5 text-left ${onClick ? 'cursor-pointer rounded-xl px-1 -mx-1 hover:opacity-80 transition-opacity' : ''}`}
+    >
       {/* High-fidelity Logo matching PAGE DE GARDE.png: Navy blue gear with a trend chart overlaid */}
       <svg className="w-11 h-11 shrink-0" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Navy Cogwheel / Gear Outline */}
@@ -38,20 +65,22 @@ export function MaintexHeaderLogo() {
           Maintenance Excellence
         </span>
       </div>
-    </div>
+    </Tag>
   );
 }
 
-export default function Header() {
+export default function Header({ onHome, userName = '', roleLabel = '', isAdmin = false, onAdmin, onLogout }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
     <header className="h-18 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm">
       
-      {/* Left: Beautiful MAINTeX Logo block */}
-      <MaintexHeaderLogo />
+      {/* À gauche : le logo ramène à l'accueil MAINTeX. */}
+      <MaintexHeaderLogo onClick={onHome} />
 
-      {/* Center: Four rounded, clean selectors in white cards exactly matching image */}
+      {/* Sélecteurs de périmètre : encore décoratifs, aucune valeur réelle.
+          Ils fixeront l'usine, l'unité, la zone et la période transmises aux applications. */}
       <div className="hidden xl:flex items-center gap-3">
         
         {/* Usine */}
@@ -61,7 +90,7 @@ export default function Header() {
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Usine</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Châtelet</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
@@ -73,7 +102,7 @@ export default function Header() {
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Unité</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Aciérie</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
@@ -85,7 +114,7 @@ export default function Header() {
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Zone</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Zone 1</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
@@ -97,7 +126,7 @@ export default function Header() {
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Période</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Jan 2026 - Déc 2026</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
@@ -139,21 +168,66 @@ export default function Header() {
           )}
         </div>
 
-        {/* User profile section matching Châtelet steelworker style in white card */}
-        <div className="flex items-center gap-3">
-          
-          {/* Avatar with initials 'JD' in dark blue background */}
-          <div className="w-10 h-10 rounded-full bg-[#0B3C8F] text-white font-extrabold text-sm flex items-center justify-center shadow-inner border border-[#0B3C8F]/20">
-            JD
-          </div>
-          
-          {/* Details */}
-          <div className="hidden sm:block text-left">
-            <p className="text-xs font-bold text-slate-800 leading-none">Jean Dupont</p>
-            <p className="text-[10px] text-slate-400 font-semibold mt-1 leading-none">Responsable Maintenance</p>
-          </div>
-          
-          <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+        {isAdmin && onAdmin && (
+          <button
+            type="button"
+            onClick={onAdmin}
+            className="hidden md:inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-2 text-xs font-bold text-[#0B3C8F] hover:bg-blue-100/70 transition-colors"
+          >
+            <Shield className="w-4 h-4" />
+            Administration
+          </button>
+        )}
+
+        {/* Personne connectée */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-3 rounded-xl px-1.5 py-1 hover:bg-slate-50"
+            aria-haspopup="menu"
+            aria-expanded={showUserMenu}
+          >
+            <div className="w-10 h-10 rounded-full bg-[#0B3C8F] text-white font-extrabold text-sm flex items-center justify-center shadow-inner border border-[#0B3C8F]/20">
+              {initialsOf(userName)}
+            </div>
+            <div className="hidden sm:block text-left">
+              <p className="text-xs font-bold text-slate-800 leading-none">{userName}</p>
+              <p className="text-[10px] text-slate-400 font-semibold mt-1 leading-none">{roleLabel}</p>
+            </div>
+            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+          </button>
+
+          {showUserMenu && (
+            <div role="menu" className="absolute right-0 top-12 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden py-1">
+              {isAdmin && onAdmin && (
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    onAdmin();
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <Shield className="w-4 h-4" /> Administration
+                </button>
+              )}
+              {onLogout && (
+                <button
+                  role="menuitem"
+                  type="button"
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    onLogout();
+                  }}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <LogOut className="w-4 h-4" /> Déconnexion
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

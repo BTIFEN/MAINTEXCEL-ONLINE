@@ -7,10 +7,12 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
+    "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "vitest run",
-    "start": "node server.js"
+    "test": "vitest run src && npm run test:server",
+    "start": "node server.js",
+    "test:server": "node --experimental-strip-types --no-warnings --test tests/server/*.test.js",
+    "dev:server": "MAINTEX_STORE=file PORT=3001 MAINTEX_INSECURE_COOKIES=true node server.js"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -35,5 +37,8 @@
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
+  },
+  "engines": {
+    "node": ">=22.6"
   }
 }

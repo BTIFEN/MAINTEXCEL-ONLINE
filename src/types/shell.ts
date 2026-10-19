@@ -1,5 +1,3 @@
-export type ModuleStatus = 'connected' | 'planned' | 'disabled';
-
 export interface ShellNavigationTarget {
   moduleId: string;
   label: string;
@@ -14,7 +12,7 @@ export interface ModuleDefinition {
   domainId?: string;
   domainName?: string;
   subtitle?: string;
-  status: ModuleStatus;
-  externalUrl?: string;
+  /** Application MAINTeX correspondante (voir shared/access.js). Absent : écran d'attente. */
+  appId?: string;
   route?: string;
 }

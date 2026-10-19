@@ -12,9 +12,10 @@ interface MaintexHomeProps {
     subtitle?: string,
   ) => void;
   embedded?: boolean;
+  canOpen?: (moduleId: string) => boolean;
 }
 
-export default function MaintexHome({ onNavigate }: MaintexHomeProps) {
+export default function MaintexHome({ onNavigate, canOpen }: MaintexHomeProps) {
   const [activeDomainId, setActiveDomainId] = useState<string | null>('work-mgmt');
 
   const handleToggleDomain = (id: string) => {
@@ -62,7 +63,7 @@ export default function MaintexHome({ onNavigate }: MaintexHomeProps) {
           </section>
         </div>
 
-        <QuickApplicationsBar onNavigate={onNavigate} />
+        <QuickApplicationsBar onNavigate={onNavigate} canOpen={canOpen} />
       </main>
     </div>
   );

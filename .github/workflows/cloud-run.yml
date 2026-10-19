@@ -1,0 +1,136 @@
+name: Cloud Run — déploiement MAINTeX
+
+# Préproduction : chaque push sur la branche « deploy/preview ».
+# Production : lancement manuel (une fois ce fichier sur main), qui republie
+# exactement l'image testée en préproduction.
+
+on:
+  push:
+    branches: ['deploy/preview']
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "preview = préproduction seule ; production = préproduction puis même image en production"
+        required: true
+        type: choice
+        options: [preview, production]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: maintex-cloud-run
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: utilitarian-tranquility-xvxch
+  PROJECT_NUMBER: '500610893724'
+  REGION: europe-west1
+  WIF_PROVIDER: projects/500610893724/locations/global/workloadIdentityPools/github-maintex/providers/github
+  DEPLOY_SA: github-maintex-deployer@utilitarian-tranquility-xvxch.iam.gserviceaccount.com
+  RUNTIME_SA: maintex-runtime@utilitarian-tranquility-xvxch.iam.gserviceaccount.com
+  PREVIEW: maintex-preview
+  PRODUCTION: maintex
+  # Configuration non secrète (les secrets viennent de Secret Manager).
+  GOOGLE_CLIENT_ID: '500610893724-1e9k2076brb32apdmkmfuuup5fl4f0j0.apps.googleusercontent.com'
+  # Administrateurs d'amorçage : accès garanti à la zone Admin.
+  # Comptes personnels provisoires, à remplacer par des comptes @aperam.com lors du transfert.
+  BOOTSTRAP_ADMINS: batifen.sprl@gmail.com,tuncay.gursoy@gmail.com
+  APP_URLS: '{"5s":"https://gestion-5s-digital-prod-500610893724.europe-west1.run.app","alphap":"https://alphap-500610893724.europe-west1.run.app","meetings":"https://meeting-management-qbxmdrfhnq-ew.a.run.app"}'
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.ready.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Vérification avant déploiement
+        run: |
+          bun install
+          bun run lint
+          bunx vitest run src
+          npm run test:server
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Variables de la préproduction
+        run: |
+          cat > env.yaml <<YAML
+          MAINTEX_STORE: firestore
+          MAINTEX_FIRESTORE_PREFIX: maintex_preview_
+          MAINTEX_WORKSPACE_DOMAIN: aperam.com
+          MAINTEX_PUBLIC_URL: https://${PREVIEW}-${PROJECT_NUMBER}.${REGION}.run.app
+          MAINTEX_GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
+          MAINTEX_BOOTSTRAP_ADMINS: '${BOOTSTRAP_ADMINS}'
+          MAINTEX_APP_URLS: '${APP_URLS}'
+          YAML
+          cat env.yaml
+      - name: Déploiement de la préproduction
+        run: |
+          set -o pipefail
+          if ! gcloud run deploy "$PREVIEW" --project="$PROJECT_ID" --region="$REGION" --source=. \
+            --service-account="$RUNTIME_SA" --env-vars-file=env.yaml \
+            --set-secrets=MAINTEX_SESSION_SECRET=maintex-session-secret:latest,MAINTEX_SIGNING_KEY=maintex-signing-key:latest \
+            --memory=512Mi --max-instances=3 --allow-unauthenticated --quiet 2>&1 | tee deploy.log; then
+            # Remonte les dernières lignes en annotations (lisibles via l'API GitHub).
+            grep -v '^\s*$' deploy.log | tail -n 12 | while IFS= read -r line; do echo "::error::${line//%/%25}"; done
+            BUILD=$(grep -oE 'builds/[0-9a-f-]{36}' deploy.log | tail -1 | cut -d/ -f2)
+            if [ -n "$BUILD" ]; then
+              gcloud builds log "$BUILD" --project="$PROJECT_ID" --region="$REGION" 2>/dev/null | grep -iE 'error|fail|denied' | tail -n 10 | while IFS= read -r line; do echo "::error::build: ${line//%/%25}"; done
+            fi
+            exit 1
+          fi
+      - name: Préproduction prête
+        id: ready
+        run: |
+          gcloud run services describe "$PREVIEW" --project="$PROJECT_ID" --region="$REGION" --format=json > svc.json
+          python3 - <<'PY'
+          import json, os
+          d = json.load(open('svc.json'))
+          st = d['status']
+          assert st['latestReadyRevisionName'] == st['latestCreatedRevisionName'], 'Révision non prête'
+          image = d['spec']['template']['spec']['containers'][0]['image']
+          assert '@sha256:' in image, 'Image sans empreinte'
+          open(os.environ['GITHUB_OUTPUT'], 'a').write(f'image={image}\n')
+          print('Adresse :', st['url'])
+          PY
+
+  production:
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'production'
+    needs: preview
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Variables de la production
+        run: |
+          cat > env.yaml <<YAML
+          MAINTEX_STORE: firestore
+          MAINTEX_FIRESTORE_PREFIX: maintex_
+          MAINTEX_WORKSPACE_DOMAIN: aperam.com
+          MAINTEX_PUBLIC_URL: https://${PRODUCTION}-${PROJECT_NUMBER}.${REGION}.run.app
+          MAINTEX_GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
+          MAINTEX_BOOTSTRAP_ADMINS: '${BOOTSTRAP_ADMINS}'
+          MAINTEX_APP_URLS: '${APP_URLS}'
+          YAML
+      - name: Publication de l'image testée
+        run: |
+          gcloud run deploy "$PRODUCTION" --project="$PROJECT_ID" --region="$REGION" \
+            --image="${{ needs.preview.outputs.image }}" \
+            --service-account="$RUNTIME_SA" --env-vars-file=env.yaml \
+            --set-secrets=MAINTEX_SESSION_SECRET=maintex-session-secret:latest,MAINTEX_SIGNING_KEY=maintex-signing-key:latest \
+            --memory=512Mi --max-instances=5 --allow-unauthenticated --quiet
