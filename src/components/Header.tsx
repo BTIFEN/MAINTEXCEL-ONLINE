@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 
 interface HeaderProps {
+  /** Retour à l'accueil MAINTeX, déclenché par un clic sur le logo. */
+  onHome?: () => void;
   userName?: string;
   roleLabel?: string;
   isAdmin?: boolean;
@@ -28,9 +30,15 @@ const initialsOf = (name: string) =>
     .map((part) => part[0]?.toUpperCase() || '')
     .join('') || '?';
 
-export function MaintexHeaderLogo() {
+export function MaintexHeaderLogo({ onClick }: { onClick?: () => void } = {}) {
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div className="flex items-center gap-2.5">
+    <Tag
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      aria-label={onClick ? 'Retour à l’accueil MAINTeX' : undefined}
+      className={`flex items-center gap-2.5 text-left ${onClick ? 'cursor-pointer rounded-xl px-1 -mx-1 hover:opacity-80 transition-opacity' : ''}`}
+    >
       {/* High-fidelity Logo matching PAGE DE GARDE.png: Navy blue gear with a trend chart overlaid */}
       <svg className="w-11 h-11 shrink-0" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Navy Cogwheel / Gear Outline */}
@@ -57,19 +65,19 @@ export function MaintexHeaderLogo() {
           Maintenance Excellence
         </span>
       </div>
-    </div>
+    </Tag>
   );
 }
 
-export default function Header({ userName = '', roleLabel = '', isAdmin = false, onAdmin, onLogout }: HeaderProps) {
+export default function Header({ onHome, userName = '', roleLabel = '', isAdmin = false, onAdmin, onLogout }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
     <header className="h-18 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm">
       
-      {/* Left: Beautiful MAINTeX Logo block */}
-      <MaintexHeaderLogo />
+      {/* À gauche : le logo ramène à l'accueil MAINTeX. */}
+      <MaintexHeaderLogo onClick={onHome} />
 
       {/* Center: Four rounded, clean selectors in white cards exactly matching image */}
       <div className="hidden xl:flex items-center gap-3">

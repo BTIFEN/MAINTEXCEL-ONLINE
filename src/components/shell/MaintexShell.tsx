@@ -184,6 +184,7 @@ export default function MaintexShell() {
     <div className="min-h-screen bg-[#F0F5FA] text-slate-900 flex flex-col justify-between">
       <div className="sticky top-0 z-50">
         <Header
+          onHome={handleHome}
           userName={session.user.name}
           roleLabel={session.user.roleLabel}
           isAdmin={session.access.isAdmin}
