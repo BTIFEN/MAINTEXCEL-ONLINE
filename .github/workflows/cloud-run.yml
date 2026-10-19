@@ -75,10 +75,19 @@ jobs:
           cat env.yaml
       - name: Déploiement de la préproduction
         run: |
-          gcloud run deploy "$PREVIEW" --project="$PROJECT_ID" --region="$REGION" --source=. \
+          set -o pipefail
+          if ! gcloud run deploy "$PREVIEW" --project="$PROJECT_ID" --region="$REGION" --source=. \
             --service-account="$RUNTIME_SA" --env-vars-file=env.yaml \
             --set-secrets=MAINTEX_SESSION_SECRET=maintex-session-secret:latest,MAINTEX_SIGNING_KEY=maintex-signing-key:latest \
-            --memory=512Mi --max-instances=3 --allow-unauthenticated --quiet
+            --memory=512Mi --max-instances=3 --allow-unauthenticated --quiet 2>&1 | tee deploy.log; then
+            # Remonte les dernières lignes en annotations (lisibles via l'API GitHub).
+            grep -v '^\s*$' deploy.log | tail -n 12 | while IFS= read -r line; do echo "::error::${line//%/%25}"; done
+            BUILD=$(grep -oE 'builds/[0-9a-f-]{36}' deploy.log | tail -1 | cut -d/ -f2)
+            if [ -n "$BUILD" ]; then
+              gcloud builds log "$BUILD" --project="$PROJECT_ID" --region="$REGION" 2>/dev/null | grep -iE 'error|fail|denied' | tail -n 10 | while IFS= read -r line; do echo "::error::build: ${line//%/%25}"; done
+            fi
+            exit 1
+          fi
       - name: Préproduction prête
         id: ready
         run: |
