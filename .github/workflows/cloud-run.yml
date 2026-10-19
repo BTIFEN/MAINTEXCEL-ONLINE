@@ -78,7 +78,7 @@ jobs:
           gcloud run deploy "$PREVIEW" --project="$PROJECT_ID" --region="$REGION" --source=. \
             --service-account="$RUNTIME_SA" --env-vars-file=env.yaml \
             --set-secrets=MAINTEX_SESSION_SECRET=maintex-session-secret:latest,MAINTEX_SIGNING_KEY=maintex-signing-key:latest \
-            --memory=512Mi --max-instances=3 --quiet
+            --memory=512Mi --max-instances=3 --allow-unauthenticated --quiet
       - name: Préproduction prête
         id: ready
         run: |
@@ -122,4 +122,4 @@ jobs:
             --image="${{ needs.preview.outputs.image }}" \
             --service-account="$RUNTIME_SA" --env-vars-file=env.yaml \
             --set-secrets=MAINTEX_SESSION_SECRET=maintex-session-secret:latest,MAINTEX_SIGNING_KEY=maintex-signing-key:latest \
-            --memory=512Mi --max-instances=5 --quiet
+            --memory=512Mi --max-instances=5 --allow-unauthenticated --quiet
