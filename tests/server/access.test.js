@@ -97,6 +97,8 @@ test('navigation : écrans d’attente ouverts, applications branchées contrôl
   assert.equal(canOpenNavigation(access, 'quick.5s'), true);
   assert.equal(canOpenNavigation(access, 'excellence-terrain.5s'), true);
   assert.equal(canOpenNavigation(access, 'quick.meeting-management'), false);
+  // Le domaine « Work Management » conduit à ALPHAP : les droits d'ALPHAP s'y appliquent.
+  assert.equal(canOpenNavigation(access, 'work-mgmt.execution'), canOpenNavigation(access, 'quick.alpab'));
   assert.equal(canOpenNavigation(null, 'pilotage.kpi-d-excellence'), false);
 });
 

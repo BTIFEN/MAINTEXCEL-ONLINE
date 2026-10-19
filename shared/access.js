@@ -155,6 +155,15 @@ export const APP_CATALOG = [
  */
 export const NAVIGATION_TO_APP = {
   'quick.alpab': 'alphap',
+  // Tout le domaine « Work Management » est couvert par ALPHAP : chaque entrée
+  // y conduit plutôt que vers un écran d'attente.
+  'work-mgmt.notifications-and-gatekeeping': 'alphap',
+  'work-mgmt.preparation': 'alphap',
+  'work-mgmt.planification-and-ordonnancement': 'alphap',
+  'work-mgmt.arrets-planifies-shutdowns': 'alphap',
+  'work-mgmt.execution': 'alphap',
+  'work-mgmt.suivi-and-kpi': 'alphap',
+  'work-mgmt.maintenance-opportuniste': 'alphap',
   'quick.meeting-management': 'meetings',
   'quick.rca': 'rca',
   'quick.5s': '5s',
