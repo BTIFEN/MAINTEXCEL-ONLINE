@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
-import { 
-  Bell, 
-  ChevronDown, 
-  MapPin, 
-  Calendar, 
-  Workflow,
-  SlidersHorizontal,
-  Factory,
+import {
+  Bell,
+  ChevronDown,
+  ClipboardCheck,
+  Wrench,
+  Users,
+  LayoutGrid,
   LogOut,
   Shield
 } from 'lucide-react';
+
+/** Une application déjà développée, proposée en accès rapide dans le bandeau. */
+export interface QuickAccessEntry {
+  /** Identifiant de navigation (voir moduleRegistry). */
+  moduleId: string;
+  /** Identifiant de l'application (voir shared/access.js). */
+  appId: string;
+  label: string;
+  subtitle?: string;
+}
 
 interface HeaderProps {
   /** Retour à l'accueil MAINTeX, déclenché par un clic sur le logo. */
@@ -19,7 +28,25 @@ interface HeaderProps {
   isAdmin?: boolean;
   onAdmin?: () => void;
   onLogout?: () => void;
+  /** Applications branchées et autorisées pour la personne connectée. */
+  quickAccess?: QuickAccessEntry[];
+  onQuickAccess?: (entry: QuickAccessEntry) => void;
+  /** Application actuellement ouverte, mise en évidence dans le bandeau. */
+  activeAppId?: string;
 }
+
+/** Pastille de chaque application : une couleur et un pictogramme stables. */
+const APP_BADGES: Record<string, { icon: React.ComponentType<{ className?: string }>; tile: string; ring: string }> = {
+  '5s': { icon: ClipboardCheck, tile: 'bg-blue-50/80 text-blue-600 border-blue-100/60', ring: 'border-blue-300 bg-blue-50/60' },
+  alphap: { icon: Wrench, tile: 'bg-emerald-50/80 text-emerald-600 border-emerald-100/60', ring: 'border-emerald-300 bg-emerald-50/60' },
+  meetings: { icon: Users, tile: 'bg-amber-50/80 text-amber-600 border-amber-100/60', ring: 'border-amber-300 bg-amber-50/60' },
+};
+
+const DEFAULT_BADGE = {
+  icon: LayoutGrid,
+  tile: 'bg-slate-100 text-slate-500 border-slate-200',
+  ring: 'border-slate-300 bg-slate-100',
+};
 
 const initialsOf = (name: string) =>
   name
@@ -69,7 +96,17 @@ export function MaintexHeaderLogo({ onClick }: { onClick?: () => void } = {}) {
   );
 }
 
-export default function Header({ onHome, userName = '', roleLabel = '', isAdmin = false, onAdmin, onLogout }: HeaderProps) {
+export default function Header({
+  onHome,
+  userName = '',
+  roleLabel = '',
+  isAdmin = false,
+  onAdmin,
+  onLogout,
+  quickAccess = [],
+  onQuickAccess,
+  activeAppId,
+}: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -79,59 +116,41 @@ export default function Header({ onHome, userName = '', roleLabel = '', isAdmin 
       {/* À gauche : le logo ramène à l'accueil MAINTeX. */}
       <MaintexHeaderLogo onClick={onHome} />
 
-      {/* Sélecteurs de périmètre : encore décoratifs, aucune valeur réelle.
-          Ils fixeront l'usine, l'unité, la zone et la période transmises aux applications. */}
-      <div className="hidden xl:flex items-center gap-3">
-        
-        {/* Usine */}
-        <div className="bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl px-4 py-2 flex items-center gap-3 cursor-pointer shadow-xs transition-all w-44">
-          <div className="w-8 h-8 rounded-lg bg-blue-50/80 flex items-center justify-center text-blue-600 shrink-0 border border-blue-100/50">
-            <Factory className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Usine</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        </div>
-
-        {/* Unité */}
-        <div className="bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl px-4 py-2 flex items-center gap-3 cursor-pointer shadow-xs transition-all w-44">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50/80 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-100/50">
-            <Workflow className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Unité</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        </div>
-
-        {/* Zone */}
-        <div className="bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl px-4 py-2 flex items-center gap-3 cursor-pointer shadow-xs transition-all w-44">
-          <div className="w-8 h-8 rounded-lg bg-cyan-50/80 flex items-center justify-center text-cyan-600 shrink-0 border border-cyan-100/50">
-            <MapPin className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Zone</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        </div>
-
-        {/* Période */}
-        <div className="bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl px-4 py-2 flex items-center gap-3 cursor-pointer shadow-xs transition-all w-52">
-          <div className="w-8 h-8 rounded-lg bg-amber-50/80 flex items-center justify-center text-amber-600 shrink-0 border border-amber-100/50">
-            <Calendar className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Période</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        </div>
-
-      </div>
+      {/* Accès rapide aux applications déjà développées.
+          La liste vient du serveur : une personne ne voit que ce à quoi elle a droit. */}
+      {quickAccess.length > 0 && (
+        <nav aria-label="Accès rapide aux applications" className="hidden lg:flex items-center gap-2.5">
+          {quickAccess.map((entry) => {
+            const badge = APP_BADGES[entry.appId] || DEFAULT_BADGE;
+            const Icon = badge.icon;
+            const active = entry.appId === activeAppId;
+            return (
+              <button
+                key={entry.moduleId}
+                type="button"
+                onClick={() => onQuickAccess?.(entry)}
+                aria-current={active ? 'page' : undefined}
+                title={entry.subtitle}
+                className={`rounded-xl px-3.5 py-2 flex items-center gap-2.5 shadow-xs transition-all border text-left ${
+                  active ? badge.ring : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-white'
+                }`}
+              >
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${badge.tile}`}>
+                  <Icon className="w-4 h-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">
+                    Ouvrir
+                  </span>
+                  <span className="block text-xs font-bold text-slate-700 leading-none mt-1.5 truncate max-w-[140px]">
+                    {entry.label}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       {/* Right: Notifications alert bell & User Profile exactly matching image */}
       <div className="flex items-center gap-4.5">

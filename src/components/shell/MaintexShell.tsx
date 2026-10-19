@@ -5,7 +5,9 @@ import Workspace from './Workspace';
 import AdminPanel from '../admin/AdminPanel';
 import type { ShellNavigationTarget } from '../../types/shell';
 import type { EffectiveAccess, ShellSession } from '../../types/access';
+import type { QuickAccessEntry } from '../Header';
 import { DOMAINS_CONFIG } from '../../config/domainsConfig';
+import { QUICK_MODULES, findModule } from '../../config/moduleRegistry';
 import { canOpenNavigation } from '../../../shared/access.js';
 import { api, ApiError } from '../../shell/api';
 import { interpretMessage } from '../../shell/messageBridge';
@@ -121,6 +123,19 @@ export default function MaintexShell() {
     setView({ kind: 'home' });
   }, []);
 
+  // Accès rapide du bandeau : uniquement les applications réellement branchées,
+  // et seulement celles que la personne a le droit d'ouvrir.
+  const quickAccess: QuickAccessEntry[] = !session
+    ? []
+    : QUICK_MODULES.flatMap((module) => {
+        if (!module.appId) return [];
+        const app = session.apps.find((candidate) => candidate.id === module.appId);
+        if (!app || app.status !== 'connected' || !app.allowed || !app.url) return [];
+        return [{ moduleId: module.id, appId: app.id, label: app.label, subtitle: app.subtitle }];
+      });
+
+  const activeAppId = view.kind === 'app' ? findModule(view.target.moduleId)?.appId : undefined;
+
   const handleNavigate = (moduleId: string, label?: string, domainId?: string, subtitle?: string) => {
     if (!canOpen(session?.access, moduleId)) {
       setNotice('Accès refusé à ce module pour votre profil. Contactez l’administrateur MAINTeX si vous en avez besoin.');
@@ -193,6 +208,9 @@ export default function MaintexShell() {
             setView({ kind: 'admin' });
           }}
           onLogout={logout}
+          quickAccess={quickAccess}
+          activeAppId={activeAppId}
+          onQuickAccess={(entry) => handleNavigate(entry.moduleId, entry.label, undefined, entry.subtitle)}
         />
       </div>
 
