@@ -11,6 +11,7 @@ import { QUICK_MODULES, findModule } from '../../config/moduleRegistry';
 import { canOpenNavigation } from '../../../shared/access.js';
 import { api, ApiError } from '../../shell/api';
 import { interpretMessage } from '../../shell/messageBridge';
+import { applyZoom, readZoom, saveZoom, zoomIn, zoomLabel, zoomOut, ZOOM_DEFAULT } from '../../shell/zoom';
 
 type View = { kind: 'home' } | { kind: 'app'; target: ShellNavigationTarget } | { kind: 'admin' };
 
@@ -29,6 +30,7 @@ export default function MaintexShell() {
   const [authError, setAuthError] = useState('');
   const [notice, setNotice] = useState('');
   const [clientId, setClientId] = useState('');
+  const [zoom, setZoom] = useState<number>(ZOOM_DEFAULT);
   const googleLoginRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<ShellSession | null>(null);
   sessionRef.current = session;
@@ -46,6 +48,20 @@ export default function MaintexShell() {
       }
       return null;
     }
+  }, []);
+
+  // Agrandissement : relu au démarrage, puis posé sur le document.
+  useEffect(() => {
+    setZoom(readZoom());
+  }, []);
+
+  useEffect(() => {
+    applyZoom(zoom);
+  }, [zoom]);
+
+  const changeZoom = useCallback((next: number) => {
+    setZoom(next);
+    saveZoom(next);
   }, []);
 
   useEffect(() => {
@@ -201,6 +217,35 @@ export default function MaintexShell() {
               {authError}
             </p>
           )}
+
+          {/* L'agrandissement est accessible avant même la connexion : qui a besoin
+              de caractères plus grands en a besoin dès cet écran. */}
+          <div className="flex items-center justify-center gap-1.5 pt-1" role="group" aria-label="Taille de l’affichage">
+            <button
+              type="button"
+              onClick={() => changeZoom(zoomOut(zoom))}
+              aria-label="Réduire la taille de l’affichage"
+              className="rounded-lg px-3 py-1.5 text-xs font-extrabold text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            >
+              A−
+            </button>
+            <button
+              type="button"
+              onClick={() => changeZoom(ZOOM_DEFAULT)}
+              aria-label="Revenir à la taille normale"
+              className="text-[10px] font-extrabold text-slate-500 tabular-nums hover:text-slate-200 transition-colors min-w-[42px]"
+            >
+              {zoomLabel(zoom)}
+            </button>
+            <button
+              type="button"
+              onClick={() => changeZoom(zoomIn(zoom))}
+              aria-label="Agrandir la taille de l’affichage"
+              className="rounded-lg px-3 py-1.5 text-sm font-extrabold text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            >
+              A+
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -221,6 +266,10 @@ export default function MaintexShell() {
           onLogout={logout}
           quickAccess={quickAccess}
           activeAppId={activeAppId}
+          zoom={zoom}
+          onZoomIn={() => changeZoom(zoomIn(zoom))}
+          onZoomOut={() => changeZoom(zoomOut(zoom))}
+          onZoomReset={() => changeZoom(ZOOM_DEFAULT)}
           onQuickAccess={(entry) => handleNavigate(entry.moduleId, entry.label, undefined, entry.subtitle)}
         />
       </div>
