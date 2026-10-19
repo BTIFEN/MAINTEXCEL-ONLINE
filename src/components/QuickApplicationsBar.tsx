@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Lock } from 'lucide-react';
+import { Clock, LayoutGrid, Lock } from 'lucide-react';
 
 interface QuickApplicationsBarProps {
   onNavigate?: (
@@ -10,9 +10,11 @@ interface QuickApplicationsBarProps {
   ) => void;
   /** Indique si la personne connectée peut ouvrir l'entrée (droits MAINTeX). */
   canOpen?: (moduleId: string) => boolean;
+  /** Indique si l'application est réellement en service. Les autres sont grisées. */
+  isReady?: (moduleId: string) => boolean;
 }
 
-export default function QuickApplicationsBar({ onNavigate, canOpen }: QuickApplicationsBarProps) {
+export default function QuickApplicationsBar({ onNavigate, canOpen, isReady }: QuickApplicationsBarProps) {
   const apps = [
     {
       id: 'alpab',
@@ -162,36 +164,58 @@ export default function QuickApplicationsBar({ onNavigate, canOpen }: QuickAppli
       {/* Applications connected and planned */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-4">
         {apps.map((app) => {
-          const locked = canOpen ? !canOpen(`quick.${app.id}`) : false;
+          const moduleId = `quick.${app.id}`;
+          // Pas encore développée : grisée et inerte, plutôt qu'un clic qui mène à une page vide.
+          const pending = isReady ? !isReady(moduleId) : false;
+          const locked = !pending && (canOpen ? !canOpen(moduleId) : false);
+          const disabled = pending || locked;
           return (
             <div
               key={app.name}
               role="button"
               tabIndex={0}
-              aria-disabled={locked}
-              title={locked ? 'Accès non accordé à votre profil' : undefined}
-              onClick={() => handleAppClick(app)}
+              aria-disabled={disabled}
+              title={
+                pending
+                  ? 'Application pas encore développée'
+                  : locked
+                    ? 'Accès non accordé à votre profil'
+                    : undefined
+              }
+              onClick={() => {
+                if (disabled) return;
+                handleAppClick(app);
+              }}
               onKeyDown={(event) => {
+                if (disabled) return;
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
                   handleAppClick(app);
                 }
               }}
               className={`flex flex-col items-center justify-center p-3 bg-white border rounded-2xl transition-all duration-150 group shadow-2xs relative ${
-                locked
+                disabled
                   ? 'border-slate-100 opacity-50 grayscale cursor-not-allowed'
                   : 'border-slate-100 hover:bg-blue-50/20 hover:border-blue-300 cursor-pointer'
               }`}
             >
-              <div className="shrink-0 transition-transform group-hover:scale-105 duration-200">
+              <div className={`shrink-0 duration-200 ${disabled ? '' : 'transition-transform group-hover:scale-105'}`}>
                 {app.icon}
               </div>
 
-              <span className="text-xs font-bold text-slate-800 mt-2.5 tracking-tight truncate w-full text-center group-hover:text-blue-600 transition-colors">
+              <span
+                className={`text-xs font-bold mt-2.5 tracking-tight truncate w-full text-center transition-colors ${
+                  disabled ? 'text-slate-500' : 'text-slate-800 group-hover:text-blue-600'
+                }`}
+              >
                 {app.name}
               </span>
 
-              {locked ? (
+              {pending ? (
+                <span className="inline-flex items-center gap-1 text-[8px] font-extrabold mt-1.5 uppercase font-mono tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                  <Clock className="w-2.5 h-2.5" /> À venir
+                </span>
+              ) : locked ? (
                 <span className="inline-flex items-center gap-1 text-[8px] font-extrabold mt-1.5 uppercase font-mono tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                   <Lock className="w-2.5 h-2.5" /> Restreint
                 </span>

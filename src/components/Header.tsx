@@ -3,12 +3,21 @@ import {
   Bell,
   ChevronDown,
   ClipboardCheck,
+  MessageCircle,
+  Phone,
   Wrench,
   Users,
   LayoutGrid,
   LogOut,
   Shield
 } from 'lucide-react';
+
+// Contact du responsable de la plateforme, affiché dans le bandeau.
+// Le format international est le seul que WhatsApp accepte dans un lien.
+const CONTACT_PHONE_DISPLAY = '+32 477 88 55 87';
+const CONTACT_PHONE_E164 = '+32477885587';
+const CONTACT_TEL_HREF = `tel:${CONTACT_PHONE_E164}`;
+const CONTACT_WHATSAPP_HREF = `https://wa.me/${CONTACT_PHONE_E164.replace('+', '')}`;
 
 /** Une application déjà développée, proposée en accès rapide dans le bandeau. */
 export interface QuickAccessEntry {
@@ -165,6 +174,38 @@ export default function Header({
           })}
         </nav>
       )}
+
+      {/* Contact du responsable de la plateforme, à côté des applications en service. */}
+      <div className="hidden xl:flex items-center gap-2">
+        <a
+          href={CONTACT_TEL_HREF}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-slate-600 hover:border-slate-300 hover:bg-white transition-all shadow-xs"
+          title={`Appeler ${CONTACT_PHONE_DISPLAY}`}
+        >
+          <span className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-500">
+            <Phone className="w-4 h-4" />
+          </span>
+          <span className="text-left">
+            <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+              Contact
+            </span>
+            <span className="block text-xs font-bold text-slate-700 leading-none mt-1.5 whitespace-nowrap">
+              {CONTACT_PHONE_DISPLAY}
+            </span>
+          </span>
+        </a>
+
+        <a
+          href={CONTACT_WHATSAPP_HREF}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Écrire sur WhatsApp au ${CONTACT_PHONE_DISPLAY}`}
+          title="WhatsApp"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 transition-colors shadow-xs"
+        >
+          <MessageCircle className="w-4.5 h-4.5" />
+        </a>
+      </div>
 
       {/* Right: Notifications alert bell & User Profile exactly matching image */}
       <div className="flex items-center gap-4.5">

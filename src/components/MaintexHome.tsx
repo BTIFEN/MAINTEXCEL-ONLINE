@@ -13,9 +13,11 @@ interface MaintexHomeProps {
   ) => void;
   embedded?: boolean;
   canOpen?: (moduleId: string) => boolean;
+  /** Entrées dont l'application est réellement en service. */
+  isReady?: (moduleId: string) => boolean;
 }
 
-export default function MaintexHome({ onNavigate, canOpen }: MaintexHomeProps) {
+export default function MaintexHome({ onNavigate, canOpen, isReady }: MaintexHomeProps) {
   const [activeDomainId, setActiveDomainId] = useState<string | null>('work-mgmt');
 
   const handleToggleDomain = (id: string) => {
@@ -59,11 +61,12 @@ export default function MaintexHome({ onNavigate, canOpen }: MaintexHomeProps) {
               domain={activeDomain}
               onClose={() => setActiveDomainId(null)}
               onNavigate={onNavigate}
+              isReady={isReady}
             />
           </section>
         </div>
 
-        <QuickApplicationsBar onNavigate={onNavigate} canOpen={canOpen} />
+        <QuickApplicationsBar onNavigate={onNavigate} canOpen={canOpen} isReady={isReady} />
       </main>
     </div>
   );
