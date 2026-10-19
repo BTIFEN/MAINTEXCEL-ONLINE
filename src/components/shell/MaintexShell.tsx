@@ -134,6 +134,17 @@ export default function MaintexShell() {
         return [{ moduleId: module.id, appId: app.id, label: app.label, subtitle: app.subtitle }];
       });
 
+  /** Une entrée est « prête » si son application est branchée et son adresse connue. */
+  const isModuleReady = useCallback(
+    (moduleId: string) => {
+      const appId = findModule(moduleId)?.appId;
+      if (!appId || !session) return false;
+      const app = session.apps.find((candidate) => candidate.id === appId);
+      return Boolean(app && app.status === 'connected' && app.url);
+    },
+    [session],
+  );
+
   const activeAppId = view.kind === 'app' ? findModule(view.target.moduleId)?.appId : undefined;
 
   const handleNavigate = (moduleId: string, label?: string, domainId?: string, subtitle?: string) => {
@@ -221,7 +232,12 @@ export default function MaintexShell() {
       )}
       <div className="flex-1 flex flex-col justify-center">
         {(view.kind === 'home' || (view.kind === 'admin' && !session.access.isAdmin)) && (
-          <MaintexHome onNavigate={handleNavigate} canOpen={(moduleId) => canOpen(session.access, moduleId)} embedded />
+          <MaintexHome
+            onNavigate={handleNavigate}
+            canOpen={(moduleId) => canOpen(session.access, moduleId)}
+            isReady={isModuleReady}
+            embedded
+          />
         )}
         {view.kind === 'app' && (
           <main className="max-w-[1500px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-7">

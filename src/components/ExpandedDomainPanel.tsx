@@ -1,6 +1,6 @@
 import React from 'react';
 import { DomainConfig, COLOR_PALETTES, getIconByString } from '../config/domainsConfig';
-import { ChevronRight, Shield, Compass } from 'lucide-react';
+import { ChevronRight, Clock, Shield, Compass } from 'lucide-react';
 
 interface ExpandedDomainPanelProps {
   domain: DomainConfig | null;
@@ -11,6 +11,8 @@ interface ExpandedDomainPanelProps {
     domainId?: string,
     subtitle?: string,
   ) => void;
+  /** Entrées dont l'application est réellement en service. Les autres sont grisées. */
+  isReady?: (moduleId: string) => boolean;
 }
 
 const slugify = (value: string) =>
@@ -22,7 +24,7 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-export default function ExpandedDomainPanel({ domain, onClose, onNavigate }: ExpandedDomainPanelProps) {
+export default function ExpandedDomainPanel({ domain, onClose, onNavigate, isReady }: ExpandedDomainPanelProps) {
   if (!domain) {
     return (
       <div className="h-full bg-white border border-slate-200 rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-xs">
@@ -81,18 +83,36 @@ export default function ExpandedDomainPanel({ domain, onClose, onNavigate }: Exp
         <div className="space-y-2.5 overflow-y-auto max-h-[440px] pr-1 scrollbar-thin">
           {domain.submenus.map((sub, idx) => {
             const SubIcon = getIconByString(sub.iconName);
+            const moduleId = `${domain.id}.${slugify(sub.name)}`;
+            // Pas encore développée : grisée et inerte.
+            const pending = isReady ? !isReady(moduleId) : false;
             return (
-              <div 
+              <div
                 key={idx}
-                onClick={() => handleSubmenuClick(domain, sub.name, sub.subtitle)}
-                className="group flex items-center justify-between p-3.5 bg-white border border-slate-100 rounded-2xl hover:bg-blue-50/20 hover:border-blue-300 cursor-pointer transition-all duration-150 shadow-xs"
+                role="button"
+                tabIndex={pending ? -1 : 0}
+                aria-disabled={pending}
+                title={pending ? 'Application pas encore développée' : undefined}
+                onClick={() => {
+                  if (pending) return;
+                  handleSubmenuClick(domain, sub.name, sub.subtitle);
+                }}
+                className={`group flex items-center justify-between p-3.5 bg-white border rounded-2xl transition-all duration-150 shadow-xs ${
+                  pending
+                    ? 'border-slate-100 opacity-50 grayscale cursor-not-allowed'
+                    : 'border-slate-100 hover:bg-blue-50/20 hover:border-blue-300 cursor-pointer'
+                }`}
               >
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${sub.colorClass.split(' ')[1]} ${sub.colorClass.split(' ')[2]}`}>
                     <SubIcon className={`w-4 h-4 ${sub.colorClass.split(' ')[0]}`} />
                   </div>
                   <div className="text-left min-w-0">
-                    <p className="text-xs font-bold text-slate-800 leading-none truncate group-hover:text-blue-600 transition-colors">
+                    <p
+                      className={`text-xs font-bold leading-none truncate transition-colors ${
+                        pending ? 'text-slate-500' : 'text-slate-800 group-hover:text-blue-600'
+                      }`}
+                    >
                       {sub.name}
                     </p>
                     <p className="text-[10px] text-slate-400 font-medium leading-none mt-1.5 truncate">
@@ -102,10 +122,18 @@ export default function ExpandedDomainPanel({ domain, onClose, onNavigate }: Exp
                 </div>
                 
                 <div className="flex items-center gap-1.5 shrink-0 pl-2">
-                  <span className="text-[9px] bg-blue-50 text-blue-700 font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                    Ouvrir
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  {pending ? (
+                    <span className="inline-flex items-center gap-1 text-[9px] bg-slate-100 text-slate-500 font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      <Clock className="w-2.5 h-2.5" /> À venir
+                    </span>
+                  ) : (
+                    <>
+                      <span className="text-[9px] bg-blue-50 text-blue-700 font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
+                        Ouvrir
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                    </>
+                  )}
                 </div>
               </div>
             );
