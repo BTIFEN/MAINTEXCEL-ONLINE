@@ -120,6 +120,20 @@ export default function Header({
           La liste vient du serveur : une personne ne voit que ce à quoi elle a droit. */}
       {quickAccess.length > 0 && (
         <nav aria-label="Accès rapide aux applications" className="hidden lg:flex items-center gap-2.5">
+          {/* Mention discrète : ces applications-là sont en service, les autres sont à venir.
+              Pastille d'état qui pulse doucement, plutôt qu'un clignotement. */}
+          <div className="hidden xl:flex items-center gap-2 pr-1">
+            <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 motion-safe:animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            <span className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-slate-400 leading-tight">
+              Modules
+              <br />
+              en service
+            </span>
+          </div>
+
           {quickAccess.map((entry) => {
             const badge = APP_BADGES[entry.appId] || DEFAULT_BADGE;
             const Icon = badge.icon;
