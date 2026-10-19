@@ -5,9 +5,14 @@ import { Plus, Minus } from 'lucide-react';
 interface RadialNavigationProps {
   activeDomainId: string | null;
   onToggleDomain: (id: string) => void;
+  /** Un domaine est actif si au moins une de ses entrées conduit à une application en service. */
+  isDomainActive?: (domainId: string) => boolean;
 }
 
-export default function RadialNavigation({ activeDomainId, onToggleDomain }: RadialNavigationProps) {
+/** Gris des secteurs dont aucune application n'est encore en service. */
+const INACTIVE_FILL = '#CBD5E1';
+
+export default function RadialNavigation({ activeDomainId, onToggleDomain, isDomainActive }: RadialNavigationProps) {
   // Center of our 560x560 canvas
   const cx = 280;
   const cy = 280;
@@ -55,18 +60,20 @@ export default function RadialNavigation({ activeDomainId, onToggleDomain }: Rad
           const endAngle = (index + 1) * 30 - 105;
           
           const isActive = activeDomainId === domain.id;
-          
+          const available = isDomainActive ? isDomainActive(domain.id) : true;
+
           return (
             <path
               key={domain.id}
               d={getWedgePath(startAngle, endAngle)}
-              fill={domain.hexColor}
+              fill={available ? domain.hexColor : INACTIVE_FILL}
+              fillOpacity={available ? 1 : 0.55}
               stroke="#FFFFFF"
               strokeWidth="4"
               strokeLinejoin="round"
               className={`transition-all duration-300 cursor-pointer ${
-                isActive 
-                  ? 'brightness-110 drop-shadow-xl scale-[1.02] transform origin-center' 
+                isActive
+                  ? 'brightness-110 drop-shadow-xl scale-[1.02] transform origin-center'
                   : 'hover:brightness-105'
               }`}
               onClick={() => onToggleDomain(domain.id)}
@@ -83,6 +90,9 @@ export default function RadialNavigation({ activeDomainId, onToggleDomain }: Rad
             const activeIndex = DOMAINS_CONFIG.findIndex(d => d.id === activeDomainId);
             if (activeIndex !== -1) {
               const activeDomain = DOMAINS_CONFIG[activeIndex];
+              // Le trait prolonge le secteur : il en reprend donc la couleur, grise comprise.
+              const traitColor =
+                isDomainActive && !isDomainActive(activeDomain.id) ? INACTIVE_FILL : activeDomain.hexColor;
               const midAngle = activeIndex * 30 - 90;
               const rad = (midAngle * Math.PI) / 180;
               
@@ -99,15 +109,15 @@ export default function RadialNavigation({ activeDomainId, onToggleDomain }: Rad
                   <path
                     d={`M ${startX} ${startY} Q ${(startX + endX) / 2} ${startY - 40}, ${endX} ${endY}`}
                     fill="none"
-                    stroke={activeDomain.hexColor}
+                    stroke={traitColor}
                     strokeWidth="3"
                     strokeDasharray="6 6"
                     className="animate-[dash_10s_linear_infinite]"
                   />
                   {/* Miniature connection circles following the path */}
-                  <circle cx={startX} cy={startY} r="5" fill="#FFFFFF" stroke={activeDomain.hexColor} strokeWidth="2.5" />
-                  <circle cx={(startX + endX) / 2} cy={(startY - 40 + startY) / 2} r="4" fill={activeDomain.hexColor} />
-                  <circle cx={endX} cy={endY} r="5" fill={activeDomain.hexColor} stroke="#FFFFFF" strokeWidth="2.5" />
+                  <circle cx={startX} cy={startY} r="5" fill="#FFFFFF" stroke={traitColor} strokeWidth="2.5" />
+                  <circle cx={(startX + endX) / 2} cy={(startY - 40 + startY) / 2} r="4" fill={traitColor} />
+                  <circle cx={endX} cy={endY} r="5" fill={traitColor} stroke="#FFFFFF" strokeWidth="2.5" />
                 </g>
               );
             }
@@ -127,6 +137,7 @@ export default function RadialNavigation({ activeDomainId, onToggleDomain }: Rad
 
         const IconComponent = getIconByString(domain.iconName);
         const isActive = activeDomainId === domain.id;
+        const available = isDomainActive ? isDomainActive(domain.id) : true;
 
         return (
           <div
@@ -140,10 +151,16 @@ export default function RadialNavigation({ activeDomainId, onToggleDomain }: Rad
             className="z-10 w-[110px] flex flex-col items-center justify-center text-center pointer-events-none"
           >
             {/* White/light domain icon */}
-            <IconComponent className="w-5 h-5 text-white/90 drop-shadow-sm mb-1.5 shrink-0" />
+            <IconComponent
+              className={`w-5 h-5 drop-shadow-sm mb-1.5 shrink-0 ${available ? 'text-white/90' : 'text-white/70'}`}
+            />
 
             {/* Domain Name text wrapped nicely */}
-            <span className="text-[10px] font-extrabold text-white leading-tight mb-1.5 px-1 block select-none drop-shadow-sm truncate w-full">
+            <span
+              className={`text-[10px] font-extrabold leading-tight mb-1.5 px-1 block select-none drop-shadow-sm truncate w-full ${
+                available ? 'text-white' : 'text-white/80'
+              }`}
+            >
               {domain.name}
             </span>
 
@@ -153,12 +170,15 @@ export default function RadialNavigation({ activeDomainId, onToggleDomain }: Rad
                 e.stopPropagation();
                 onToggleDomain(domain.id);
               }}
-              className="w-5.5 h-5.5 rounded-full bg-white shadow-md flex items-center justify-center pointer-events-auto transition-transform hover:scale-110 active:scale-95 cursor-pointer"
+              title={available ? undefined : 'Aucune application encore en service dans ce domaine'}
+              className={`w-5.5 h-5.5 rounded-full shadow-md flex items-center justify-center pointer-events-auto transition-transform hover:scale-110 active:scale-95 cursor-pointer ${
+                available ? 'bg-white' : 'bg-white/80'
+              }`}
             >
               {isActive ? (
-                <Minus className="w-3.5 h-3.5" style={{ color: domain.hexColor }} strokeWidth="3" />
+                <Minus className="w-3.5 h-3.5" style={{ color: available ? domain.hexColor : '#64748B' }} strokeWidth="3" />
               ) : (
-                <Plus className="w-3.5 h-3.5" style={{ color: domain.hexColor }} strokeWidth="3" />
+                <Plus className="w-3.5 h-3.5" style={{ color: available ? domain.hexColor : '#64748B' }} strokeWidth="3" />
               )}
             </button>
           </div>

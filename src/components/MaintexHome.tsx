@@ -3,6 +3,7 @@ import RadialNavigation from './RadialNavigation';
 import ExpandedDomainPanel from './ExpandedDomainPanel';
 import QuickApplicationsBar from './QuickApplicationsBar';
 import { DOMAINS_CONFIG } from '../config/domainsConfig';
+import { MODULE_REGISTRY } from '../config/moduleRegistry';
 
 interface MaintexHomeProps {
   onNavigate?: (
@@ -26,6 +27,14 @@ export default function MaintexHome({ onNavigate, canOpen, isReady }: MaintexHom
 
   const activeDomain =
     DOMAINS_CONFIG.find((d) => d.id === activeDomainId) || null;
+
+  // Un domaine est actif dès qu'une de ses entrées conduit à une application
+  // en service. Les autres sont grisés sur la roue : la plateforme montre
+  // ainsi son avancement réel, sans qu'on ait à tenir une liste à la main.
+  const isDomainActive = (domainId: string) =>
+    isReady
+      ? MODULE_REGISTRY.some((module) => module.domainId === domainId && isReady(module.id))
+      : true;
 
   return (
     <div className="relative overflow-hidden">
@@ -53,6 +62,7 @@ export default function MaintexHome({ onNavigate, canOpen, isReady }: MaintexHom
             <RadialNavigation
               activeDomainId={activeDomainId}
               onToggleDomain={handleToggleDomain}
+              isDomainActive={isDomainActive}
             />
           </section>
 
