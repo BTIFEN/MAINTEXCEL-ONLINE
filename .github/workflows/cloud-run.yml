@@ -37,6 +37,12 @@ env:
   # Administrateurs d'amorçage : accès garanti à la zone Admin.
   # Comptes personnels provisoires, à remplacer par des comptes @aperam.com lors du transfert.
   BOOTSTRAP_ADMINS: batifen.sprl@gmail.com,tuncay.gursoy@gmail.com
+  # Mode démonstration : laisser VIDE en temps normal. Renseigner une adresse
+  # déjà enregistrée dans MAINTeX ouvre la plateforme SANS CONNEXION à toute
+  # personne qui a le lien. À n'utiliser que sur des données fictives, et à
+  # remettre à vide juste après la présentation.
+  DEMO_EMAIL: ''
+  DEMO_NAME: 'Visiteur démonstration'
   APP_URLS: '{"5s":"https://gestion-5s-digital-prod-500610893724.europe-west1.run.app","alphap":"https://alphap-500610893724.europe-west1.run.app","meetings":"https://meeting-management-qbxmdrfhnq-ew.a.run.app"}'
 
 jobs:
@@ -73,6 +79,8 @@ jobs:
           MAINTEX_GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
           MAINTEX_BOOTSTRAP_ADMINS: '${BOOTSTRAP_ADMINS}'
           MAINTEX_APP_URLS: '${APP_URLS}'
+          MAINTEX_DEMO_EMAIL: '${DEMO_EMAIL}'
+          MAINTEX_DEMO_NAME: '${DEMO_NAME}'
           YAML
           cat env.yaml
       - name: Déploiement de la préproduction
@@ -126,6 +134,8 @@ jobs:
           MAINTEX_GOOGLE_CLIENT_ID: '${GOOGLE_CLIENT_ID}'
           MAINTEX_BOOTSTRAP_ADMINS: '${BOOTSTRAP_ADMINS}'
           MAINTEX_APP_URLS: '${APP_URLS}'
+          MAINTEX_DEMO_EMAIL: '${DEMO_EMAIL}'
+          MAINTEX_DEMO_NAME: '${DEMO_NAME}'
           YAML
       - name: Publication de l'image testée
         run: |

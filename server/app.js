@@ -66,26 +66,44 @@ export function createApp({ service, config, signing, verifyGoogleToken, log = c
   }
 
   /** @param {Awaited<ReturnType<typeof service.getProfile>>} profile */
-  function publicProfile(profile) {
+  // Mode démonstration : toute personne qui ouvre MAINTeX est admise sous une
+  // identité unique, sans connexion. Destiné à faire visiter la plateforme
+  // chargée de données fictives. Vide = mode éteint, comportement normal.
+  const demoEmail = normalizeEmail(config.demoEmail || '');
+  const demoName = String(config.demoName || '').trim();
+
+  function publicProfile(profile, { demo = false } = {}) {
     if (!profile) return null;
     return {
       user: {
         email: profile.email,
-        name: profile.name,
+        name: demo && demoName ? demoName : profile.name,
         roleId: profile.roleId,
         roleLabel: profile.roleLabel,
         bootstrapAdmin: profile.bootstrapAdmin,
       },
       access: profile.access,
       apps: appsFor(profile),
+      demo,
     };
   }
 
   /** @param {express.Request} req */
   async function currentProfile(req) {
     const session = verifySession(readCookie(req.headers.cookie, SESSION_COOKIE), config.sessionSecret);
-    if (!session) return null;
-    return service.getProfile(session.email);
+    if (session) {
+      const profile = await service.getProfile(session.email);
+      if (profile) return profile;
+    }
+    // Personne n'est connecté : en mode démonstration, on admet le visiteur.
+    if (demoEmail) return service.getProfile(demoEmail);
+    return null;
+  }
+
+  /** Vrai si la personne n'a pas de session à elle et entre par le mode démonstration. */
+  function isDemoVisitor(req) {
+    if (!demoEmail) return false;
+    return !verifySession(readCookie(req.headers.cookie, SESSION_COOKIE), config.sessionSecret);
   }
 
   /** Protection CSRF : les requêtes qui modifient doivent venir du shell (en-tête personnalisé). */
@@ -116,13 +134,13 @@ export function createApp({ service, config, signing, verifyGoogleToken, log = c
   app.use('/api', requireShellHeader);
 
   app.get('/api/health', route(async (_req, res) => {
-    res.json({ ok: true, store: config.storeKind, auth: authEnabled, appTokens: Boolean(signing) });
+    res.json({ ok: true, store: config.storeKind, auth: authEnabled, appTokens: Boolean(signing), demo: Boolean(demoEmail) });
   }));
 
   // --- Authentification -----------------------------------------------------
 
   app.get('/api/auth/config', route(async (_req, res) => {
-    res.json({ enabled: authEnabled, clientId: authEnabled ? config.googleClientId : '' });
+    res.json({ enabled: authEnabled && !demoEmail, clientId: authEnabled ? config.googleClientId : '', demo: Boolean(demoEmail) });
   }));
 
   app.post('/api/auth/google', route(async (req, res) => {
@@ -168,7 +186,7 @@ export function createApp({ service, config, signing, verifyGoogleToken, log = c
       res.status(401).json({ error: 'UNAUTHORIZED' });
       return;
     }
-    res.json(publicProfile(profile));
+    res.json(publicProfile(profile, { demo: isDemoVisitor(req) }));
   }));
 
   app.post('/api/auth/logout', route(async (_req, res) => {
@@ -182,6 +200,14 @@ export function createApp({ service, config, signing, verifyGoogleToken, log = c
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.json({ keys: signing ? [signing.jwk] : [] });
   });
+
+  app.use('/api/admin', route(async (req, res, next) => {
+    if (isDemoVisitor(req)) {
+      res.status(403).json({ error: 'DEMO_READ_ONLY', message: 'Zone d’administration fermée en mode démonstration.' });
+      return;
+    }
+    next();
+  }));
 
   app.post('/api/apps/:appId/token', route(async (req, res) => {
     const profile = await currentProfile(req);
