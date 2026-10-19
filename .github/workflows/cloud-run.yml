@@ -33,7 +33,7 @@ env:
   PREVIEW: maintex-preview
   PRODUCTION: maintex
   # Configuration non secrète (les secrets viennent de Secret Manager).
-  GOOGLE_CLIENT_ID: ''
+  GOOGLE_CLIENT_ID: '500610893724-1e9k2076brb32apdmkmfuuup5fl4f0j0.apps.googleusercontent.com'
   BOOTSTRAP_ADMINS: batifen.sprl@gmail.com
   APP_URLS: '{"meetings":"https://meeting-management-qbxmdrfhnq-ew.a.run.app"}'
 
