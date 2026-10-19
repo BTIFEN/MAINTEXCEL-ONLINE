@@ -1,5 +1,6 @@
 import { ArrowLeft, Boxes, PlugZap } from 'lucide-react';
 import type { ShellNavigationTarget } from '../../types/shell';
+import { useI18n } from '../../i18n/LanguageContext';
 
 interface ModulePlaceholderProps {
   target: ShellNavigationTarget;
@@ -7,6 +8,7 @@ interface ModulePlaceholderProps {
 }
 
 export default function ModulePlaceholder({ target, onBack }: ModulePlaceholderProps) {
+  const { t } = useI18n();
   return (
     <section className="min-h-[560px] bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
       <div className="h-1.5 bg-gradient-to-r from-[#0B3C8F] via-[#1C64F2] to-cyan-500" />
@@ -17,7 +19,7 @@ export default function ModulePlaceholder({ target, onBack }: ModulePlaceholderP
           className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#0B3C8F] transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
-          Retour à l’accueil MAINTeX
+          {t('workspace.back')}
         </button>
 
         <div className="mt-14 max-w-2xl mx-auto text-center">
@@ -26,7 +28,7 @@ export default function ModulePlaceholder({ target, onBack }: ModulePlaceholderP
           </div>
 
           <p className="mt-6 text-xs font-black tracking-[0.22em] uppercase text-blue-600">
-            MAINTeX Workspace
+            {t('workspace.title')}
           </p>
 
           <h1 className="mt-3 text-3xl md:text-4xl font-black text-slate-900 tracking-tight">
@@ -40,16 +42,16 @@ export default function ModulePlaceholder({ target, onBack }: ModulePlaceholderP
           )}
 
           <p className="mt-5 text-sm md:text-base text-slate-500 leading-relaxed">
-            {target.subtitle || 'Ce module fait partie de l’écosystème MAINTeX.'}
+            {target.subtitle || t('workspace.moduleBelongs')}
           </p>
 
           <div className="mt-8 inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-bold">
             <PlugZap className="w-4 h-4" />
-            Module à connecter
+            {t('workspace.toConnect')}
           </div>
 
           <p className="mt-4 text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
-            Aucun module de démonstration n’est chargé. La véritable application sera intégrée ici via le contrat d’intégration MAINTeX.
+            {t('workspace.noDemo')}
           </p>
         </div>
       </div>

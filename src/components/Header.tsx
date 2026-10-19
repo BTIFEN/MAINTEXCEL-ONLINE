@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import {
   Bell,
+  Check,
   ChevronDown,
   ClipboardCheck,
+  Globe,
   Wrench,
   Users,
   LayoutGrid,
   LogOut,
   Shield
 } from 'lucide-react';
+import { LANGUAGES } from '../i18n/translations';
+import { useI18n } from '../i18n/LanguageContext';
 
 /** Une application déjà développée, proposée en accès rapide dans le bandeau. */
 export interface QuickAccessEntry {
@@ -57,13 +61,13 @@ const initialsOf = (name: string) =>
     .map((part) => part[0]?.toUpperCase() || '')
     .join('') || '?';
 
-export function MaintexHeaderLogo({ onClick }: { onClick?: () => void } = {}) {
+export function MaintexHeaderLogo({ onClick, ariaLabel }: { onClick?: () => void; ariaLabel?: string } = {}) {
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag
       type={onClick ? 'button' : undefined}
       onClick={onClick}
-      aria-label={onClick ? 'Retour à l’accueil MAINTeX' : undefined}
+      aria-label={onClick ? ariaLabel : undefined}
       className={`flex items-center gap-2.5 text-left ${onClick ? 'cursor-pointer rounded-xl px-1 -mx-1 hover:opacity-80 transition-opacity' : ''}`}
     >
       {/* High-fidelity Logo matching PAGE DE GARDE.png: Navy blue gear with a trend chart overlaid */}
@@ -109,17 +113,20 @@ export default function Header({
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLanguages, setShowLanguages] = useState(false);
+  const { language, setLanguage, t } = useI18n();
+  const currentLanguage = LANGUAGES.find((entry) => entry.code === language) || LANGUAGES[0];
 
   return (
     <header className="h-18 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm">
       
       {/* À gauche : le logo ramène à l'accueil MAINTeX. */}
-      <MaintexHeaderLogo onClick={onHome} />
+      <MaintexHeaderLogo onClick={onHome} ariaLabel={t('header.home')} />
 
       {/* Accès rapide aux applications déjà développées.
           La liste vient du serveur : une personne ne voit que ce à quoi elle a droit. */}
       {quickAccess.length > 0 && (
-        <nav aria-label="Accès rapide aux applications" className="hidden lg:flex items-center gap-2.5">
+        <nav aria-label={t('header.quickAccess')} className="hidden lg:flex items-center gap-2.5">
           {/* Mention discrète : ces applications-là sont en service, les autres sont à venir.
               Pastille d'état qui pulse doucement, plutôt qu'un clignotement. */}
           <div className="hidden xl:flex items-center gap-2 pr-1">
@@ -128,9 +135,9 @@ export default function Header({
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
             <span className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-slate-400 leading-tight">
-              Modules
+              {t('header.modulesLine1')}
               <br />
-              en service
+              {t('header.modulesLine2')}
             </span>
           </div>
 
@@ -154,7 +161,7 @@ export default function Header({
                 </span>
                 <span className="min-w-0">
                   <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">
-                    Ouvrir
+                    {t('header.open')}
                   </span>
                   <span className="block text-xs font-bold text-slate-700 leading-none mt-1.5 truncate max-w-[140px]">
                     {entry.label}
@@ -169,6 +176,48 @@ export default function Header({
       {/* Right: Notifications alert bell & User Profile exactly matching image */}
       <div className="flex items-center gap-4.5">
         
+        {/* Sélecteur de langue : s'applique à tout l'écran et est retenu d'une visite à l'autre. */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowLanguages(!showLanguages)}
+            aria-haspopup="menu"
+            aria-expanded={showLanguages}
+            aria-label={t('header.chooseLanguage')}
+            title={t('header.language')}
+            className="flex items-center gap-1.5 rounded-full bg-slate-100/80 px-3 py-2 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            <span className="text-xs font-extrabold tracking-wide">{currentLanguage.short}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {showLanguages && (
+            <div role="menu" className="absolute right-0 top-12 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden py-1">
+              {LANGUAGES.map((entry) => (
+                <button
+                  key={entry.code}
+                  role="menuitemradio"
+                  aria-checked={entry.code === language}
+                  type="button"
+                  lang={entry.htmlLang}
+                  onClick={() => {
+                    setShowLanguages(false);
+                    setLanguage(entry.code);
+                  }}
+                  className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-[10px] font-extrabold text-slate-400 w-5">{entry.short}</span>
+                    {entry.label}
+                  </span>
+                  {entry.code === language && <Check className="w-4 h-4 text-[#0B3C8F]" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Notification Bell with red rounded badge showing 3 */}
         <div className="relative">
           <button 
@@ -184,8 +233,8 @@ export default function Header({
           {showNotifications && (
             <div className="absolute right-0 top-12 w-80 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden py-1 animate-in fade-in duration-150">
               <div className="px-4 py-2 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
-                <span className="font-bold text-xs text-slate-700">Notifications</span>
-                <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold font-mono">3 NOUVELLES</span>
+                <span className="font-bold text-xs text-slate-700">{t('header.notifications')}</span>
+                <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold font-mono">{t('header.notificationsNew', { count: 3 })}</span>
               </div>
               <div className="divide-y divide-slate-100 text-left">
                 <div className="p-3 text-xs">
@@ -208,7 +257,7 @@ export default function Header({
             className="hidden md:inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-2 text-xs font-bold text-[#0B3C8F] hover:bg-blue-100/70 transition-colors"
           >
             <Shield className="w-4 h-4" />
-            Administration
+            {t('header.admin')}
           </button>
         )}
 
@@ -243,7 +292,7 @@ export default function Header({
                   }}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  <Shield className="w-4 h-4" /> Administration
+                  <Shield className="w-4 h-4" /> {t('header.admin')}
                 </button>
               )}
               {onLogout && (
@@ -256,7 +305,7 @@ export default function Header({
                   }}
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  <LogOut className="w-4 h-4" /> Déconnexion
+                  <LogOut className="w-4 h-4" /> {t('header.logout')}
                 </button>
               )}
             </div>

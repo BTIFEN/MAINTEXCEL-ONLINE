@@ -3,6 +3,7 @@ import RadialNavigation from './RadialNavigation';
 import ExpandedDomainPanel from './ExpandedDomainPanel';
 import QuickApplicationsBar from './QuickApplicationsBar';
 import { DOMAINS_CONFIG } from '../config/domainsConfig';
+import { useI18n } from '../i18n/LanguageContext';
 
 interface MaintexHomeProps {
   onNavigate?: (
@@ -16,6 +17,7 @@ interface MaintexHomeProps {
 }
 
 export default function MaintexHome({ onNavigate, canOpen }: MaintexHomeProps) {
+  const { t } = useI18n();
   const [activeDomainId, setActiveDomainId] = useState<string | null>('work-mgmt');
 
   const handleToggleDomain = (id: string) => {
@@ -31,19 +33,19 @@ export default function MaintexHome({ onNavigate, canOpen }: MaintexHomeProps) {
         <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(420px,1fr)_420px] items-center gap-8 min-h-[590px]">
           <section className="space-y-4 text-left">
             <p className="text-xs font-black tracking-[0.22em] uppercase text-blue-600">
-              Maintenance Excellence Platform
+              {t('home.eyebrow')}
             </p>
 
             <h1 className="text-4xl xl:text-5xl font-black text-[#0B3C8F] tracking-tight leading-[0.95]">
-              Bienvenue
+              {t('home.welcome')}
               <br />
-              sur MAINTeX
+              {t('home.welcomeOn')}
             </h1>
 
             <div className="w-12 h-1 bg-[#1C64F2] rounded-full" />
 
             <p className="text-sm text-slate-500 font-semibold leading-relaxed max-w-[250px]">
-              Une vision unifiée pour une maintenance performante, fiable et durable.
+              {t('home.tagline')}
             </p>
           </section>
 

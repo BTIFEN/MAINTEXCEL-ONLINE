@@ -48,11 +48,16 @@ export function interpretMessage(event: { origin: string; data: unknown }, apps:
   return null;
 }
 
-/** Adresse chargée dans le cadre : le jeton passe dans le fragment (#), jamais envoyé aux serveurs ni journalisé. */
-export function buildEmbeddedUrl(baseUrl: string, token: string | null): string | null {
+/**
+ * Adresse chargée dans le cadre : le jeton passe dans le fragment (#), jamais envoyé aux serveurs ni journalisé.
+ * La langue choisie dans MAINTeX est transmise en clair (« maintexLang ») : chaque
+ * application pourra s'y conformer dès qu'elle sera traduite, sans rien changer ici.
+ */
+export function buildEmbeddedUrl(baseUrl: string, token: string | null, language?: string | null): string | null {
   try {
     const url = new URL(baseUrl);
     url.searchParams.set('maintexMode', 'embedded');
+    if (language) url.searchParams.set('maintexLang', language);
     url.hash = token ? `maintex_token=${encodeURIComponent(token)}` : '';
     return url.toString();
   } catch {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, AlertTriangle, ExternalLink, Info } from 'lucide-react';
 import { buildEmbeddedUrl } from '../../shell/messageBridge';
 import { ApiError } from '../../shell/api';
+import { useI18n } from '../../i18n/LanguageContext';
 
 interface ExternalModuleFrameProps {
   appId: string;
@@ -20,6 +21,7 @@ type FrameState =
 export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequestHome, requestToken }: ExternalModuleFrameProps) {
   const [state, setState] = useState<FrameState>({ phase: 'loading' });
   const [loaded, setLoaded] = useState(false);
+  const { language, t } = useI18n();
 
   useEffect(() => {
     let active = true;
@@ -29,8 +31,8 @@ export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequ
     if (!baseUrl) {
       setState({
         phase: 'error',
-        title: `Adresse de ${moduleName} non configurée`,
-        message: 'L’administrateur doit renseigner l’adresse de cette application sur le serveur MAINTeX (variable MAINTEX_APP_URLS).',
+        title: t('workspace.addressMissing', { app: moduleName }),
+        message: t('workspace.addressMissingHelp'),
       });
       return;
     }
@@ -45,9 +47,9 @@ export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequ
       })
       .then(({ token, singleSignOn }) => {
         if (!active) return;
-        const src = buildEmbeddedUrl(baseUrl, token);
+        const src = buildEmbeddedUrl(baseUrl, token, language);
         if (!src) {
-          setState({ phase: 'error', title: `Adresse de ${moduleName} invalide`, message: baseUrl });
+          setState({ phase: 'error', title: t('workspace.addressInvalid', { app: moduleName }), message: baseUrl });
           return;
         }
         setState({ phase: 'ready', src, singleSignOn });
@@ -56,15 +58,18 @@ export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequ
         if (!active) return;
         setState({
           phase: 'error',
-          title: `Accès à ${moduleName} refusé`,
-          message: error instanceof Error ? error.message : 'Accès refusé.',
+          title: t('workspace.accessDenied', { app: moduleName }),
+          message: error instanceof Error ? error.message : t('workspace.accessDeniedHelp'),
         });
       });
 
     return () => {
       active = false;
     };
-  }, [appId, baseUrl, moduleName, requestToken]);
+    // « language » en dépendance : changer de langue recharge l'application
+    // dans la nouvelle langue, sans que la personne ait à revenir à l'accueil.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appId, baseUrl, moduleName, requestToken, language]);
 
   if (state.phase === 'error') {
     return (
@@ -84,7 +89,7 @@ export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequ
             className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-[#0B3C8F] transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Retour à l’accueil MAINTeX
+            {t('workspace.back')}
           </button>
         </div>
       </div>
@@ -99,7 +104,7 @@ export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequ
         {state.phase === 'ready' && !state.singleSignOn && (
           <span className="mr-auto inline-flex items-center gap-2 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
             <Info className="w-3.5 h-3.5" />
-            Connexion unique pas encore active : {moduleName} peut vous demander de vous reconnecter.
+            {t('workspace.ownLogin')}
           </span>
         )}
         {baseUrl && (
@@ -109,7 +114,7 @@ export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequ
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-[#0B3C8F] hover:bg-blue-50"
           >
-            Ouvrir {moduleName} dans un nouvel onglet <ExternalLink className="w-4 h-4" />
+            {t('workspace.openInNewTab', { app: moduleName })} <ExternalLink className="w-4 h-4" />
           </a>
         )}
       </div>
@@ -117,7 +122,7 @@ export default function ExternalModuleFrame({ appId, moduleName, baseUrl, onRequ
       {(state.phase === 'loading' || !loaded) && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white space-y-4">
           <div className="w-12 h-12 rounded-full border-4 border-slate-100 border-t-[#0B3C8F] animate-spin" />
-          <div className="text-sm font-bold text-[#0B3C8F] tracking-wide animate-pulse">Chargement de {moduleName}…</div>
+          <div className="text-sm font-bold text-[#0B3C8F] tracking-wide animate-pulse">{t('workspace.loading', { app: moduleName })}</div>
         </div>
       )}
 

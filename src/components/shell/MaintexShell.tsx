@@ -11,6 +11,8 @@ import { QUICK_MODULES, findModule } from '../../config/moduleRegistry';
 import { canOpenNavigation } from '../../../shared/access.js';
 import { api, ApiError } from '../../shell/api';
 import { interpretMessage } from '../../shell/messageBridge';
+import { useI18n } from '../../i18n/LanguageContext';
+import { LANGUAGES } from '../../i18n/translations';
 
 type View = { kind: 'home' } | { kind: 'app'; target: ShellNavigationTarget } | { kind: 'admin' };
 
@@ -23,6 +25,7 @@ const canOpen = (access: EffectiveAccess | undefined, moduleId: string) =>
   canOpenNavigation(access as Parameters<typeof canOpenNavigation>[0], moduleId);
 
 export default function MaintexShell() {
+  const { t, language, setLanguage } = useI18n();
   const [session, setSession] = useState<ShellSession | null>(null);
   const [view, setView] = useState<View>({ kind: 'home' });
   const [authLoading, setAuthLoading] = useState(true);
@@ -83,7 +86,7 @@ export default function MaintexShell() {
             setSession(data);
             setView({ kind: 'home' });
           } catch (error) {
-            setAuthError(error instanceof Error ? error.message : 'Connexion refusée.');
+            setAuthError(error instanceof Error ? error.message : t('login.refused'));
           }
         },
       });
@@ -138,7 +141,7 @@ export default function MaintexShell() {
 
   const handleNavigate = (moduleId: string, label?: string, domainId?: string, subtitle?: string) => {
     if (!canOpen(session?.access, moduleId)) {
-      setNotice('Accès refusé à ce module pour votre profil. Contactez l’administrateur MAINTeX si vous en avez besoin.');
+      setNotice(t('access.denied'));
       return;
     }
     setNotice('');
@@ -176,20 +179,41 @@ export default function MaintexShell() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-5 text-slate-100">
         <div className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-8 space-y-5 text-center">
-          <h1 className="text-2xl font-bold">MAINTeX — Connexion sécurisée</h1>
-          <p className="text-sm text-slate-300">Connectez-vous avec votre compte Google professionnel. Un seul login donne accès à toutes vos applications.</p>
+          <h1 className="text-2xl font-bold">{t('login.title')}</h1>
+          <p className="text-sm text-slate-300">{t('login.intro')}</p>
           {authLoading ? (
-            <p>Vérification de la session…</p>
+            <p>{t('login.checking')}</p>
           ) : clientId ? (
             <div className="flex justify-center" ref={googleLoginRef} />
           ) : (
-            <p className="text-amber-300 text-sm">Le service d’authentification n’est pas encore configuré sur l’hébergement.</p>
+            <p className="text-amber-300 text-sm">{t('login.notConfigured')}</p>
           )}
           {authError && (
             <p role="alert" className="text-red-300 text-sm">
               {authError}
             </p>
           )}
+
+          {/* Le choix de la langue est possible avant même de se connecter :
+              sans cela, une personne néerlandophone arrive sur un écran français. */}
+          <div className="flex justify-center gap-1.5 pt-1">
+            {LANGUAGES.map((entry) => (
+              <button
+                key={entry.code}
+                type="button"
+                lang={entry.htmlLang}
+                aria-pressed={entry.code === language}
+                onClick={() => setLanguage(entry.code)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-extrabold tracking-wide transition-colors ${
+                  entry.code === language
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+                }`}
+              >
+                {entry.short}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -237,8 +261,8 @@ export default function MaintexShell() {
 
       <footer className="bg-white border-t border-slate-200/80 py-4 mt-auto">
         <div className="max-w-[1500px] mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-2 text-[11px] text-slate-400">
-          <div className="font-extrabold text-[#0B3C8F]">MAINTeX — Maintenance Excellence Platform</div>
-          <div>© 2026 Tuncay GURSOY — Tous droits réservés · Conçu et réalisé par Tuncay GURSOY</div>
+          <div className="font-extrabold text-[#0B3C8F]">{t('footer.brand')}</div>
+          <div>{t('footer.rights')}</div>
         </div>
       </footer>
     </div>
