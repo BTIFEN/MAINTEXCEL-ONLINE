@@ -37,7 +37,7 @@ env:
   # Administrateurs d'amorçage : accès garanti à la zone Admin.
   # Comptes personnels provisoires, à remplacer par des comptes @aperam.com lors du transfert.
   BOOTSTRAP_ADMINS: batifen.sprl@gmail.com,tuncay.gursoy@gmail.com
-  APP_URLS: '{"5s":"https://gestion-5s-digital-prod-qbxmdrfhnq-ew.a.run.app","alphap":"https://alphap-pilot-qbxmdrfhnq-ew.a.run.app","meetings":"https://meeting-management-qbxmdrfhnq-ew.a.run.app"}'
+  APP_URLS: '{"5s":"https://gestion-5s-digital-prod-500610893724.europe-west1.run.app","alphap":"https://alphap-pilot-qbxmdrfhnq-ew.a.run.app","meetings":"https://meeting-management-qbxmdrfhnq-ew.a.run.app"}'
 
 jobs:
   preview:
