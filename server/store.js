@@ -359,6 +359,8 @@ export async function createStoreFromEnv(env) {
     return new FirestoreStore({
       projectId,
       database: env.MAINTEX_FIRESTORE_DATABASE || '(default)',
+      // Préfixe des collections : sépare les données de préproduction de celles de production.
+      prefix: env.MAINTEX_FIRESTORE_PREFIX || 'maintex_',
       request: (options) => /** @type {any} */ (client.request(/** @type {any} */ ({ ...options, retry: true }))),
     });
   }
