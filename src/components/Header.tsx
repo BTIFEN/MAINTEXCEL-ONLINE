@@ -79,7 +79,8 @@ export default function Header({ onHome, userName = '', roleLabel = '', isAdmin 
       {/* À gauche : le logo ramène à l'accueil MAINTeX. */}
       <MaintexHeaderLogo onClick={onHome} />
 
-      {/* Center: Four rounded, clean selectors in white cards exactly matching image */}
+      {/* Sélecteurs de périmètre : encore décoratifs, aucune valeur réelle.
+          Ils fixeront l'usine, l'unité, la zone et la période transmises aux applications. */}
       <div className="hidden xl:flex items-center gap-3">
         
         {/* Usine */}
@@ -89,7 +90,7 @@ export default function Header({ onHome, userName = '', roleLabel = '', isAdmin 
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Usine</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Châtelet</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
@@ -101,7 +102,7 @@ export default function Header({ onHome, userName = '', roleLabel = '', isAdmin 
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Unité</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Aciérie</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
@@ -113,7 +114,7 @@ export default function Header({ onHome, userName = '', roleLabel = '', isAdmin 
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Zone</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Zone 1</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>
@@ -125,7 +126,7 @@ export default function Header({ onHome, userName = '', roleLabel = '', isAdmin 
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Période</p>
-            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">Jan 2026 - Déc 2026</p>
+            <p className="text-xs font-bold text-slate-700 leading-none mt-1.5 truncate">—</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         </div>

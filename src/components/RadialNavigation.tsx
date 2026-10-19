@@ -188,7 +188,7 @@ export default function RadialNavigation({ activeDomainId, onToggleDomain }: Rad
           </svg>
         </div>
         
-        {/* Central Logo title matching Châtelet brand */}
+        {/* Titre central */}
         <div className="flex items-baseline font-extrabold tracking-tight leading-none text-4xl">
           <span className="text-[#0B3C8F]">MAIN</span>
           <span className="text-[#1C64F2]">TeX</span>
