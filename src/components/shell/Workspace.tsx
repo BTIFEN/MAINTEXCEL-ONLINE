@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import type { ShellNavigationTarget } from '../../types/shell';
+import type { ShellApp } from '../../types/access';
 import Breadcrumbs from './Breadcrumbs';
 import ModulePlaceholder from './ModulePlaceholder';
 import ExternalModuleFrame from './ExternalModuleFrame';
@@ -7,16 +7,14 @@ import { findModule } from '../../config/moduleRegistry';
 
 interface WorkspaceProps {
   target: ShellNavigationTarget;
+  apps: ShellApp[];
   onHome: () => void;
-  connectedModule?: ReactNode;
+  requestToken: (appId: string) => Promise<string>;
 }
 
-export default function Workspace({
-  target,
-  onHome,
-  connectedModule,
-}: WorkspaceProps) {
-  const moduleDefinition = findModule(target.moduleId);
+export default function Workspace({ target, apps, onHome, requestToken }: WorkspaceProps) {
+  const appId = findModule(target.moduleId)?.appId;
+  const app = appId ? apps.find((candidate) => candidate.id === appId) : undefined;
 
   return (
     <div className="w-full">
@@ -24,16 +22,16 @@ export default function Workspace({
         <Breadcrumbs target={target} onHome={onHome} />
       </div>
 
-      {connectedModule ?? (
-        moduleDefinition?.status === 'connected' ? (
-          <ExternalModuleFrame
-            moduleName={moduleDefinition.label}
-            baseUrl={moduleDefinition.externalUrl}
-            onRequestHome={onHome}
-          />
-        ) : (
-          <ModulePlaceholder target={target} onBack={onHome} />
-        )
+      {app && app.status === 'connected' ? (
+        <ExternalModuleFrame
+          appId={app.id}
+          moduleName={app.label}
+          baseUrl={app.url}
+          onRequestHome={onHome}
+          requestToken={requestToken}
+        />
+      ) : (
+        <ModulePlaceholder target={target} onBack={onHome} />
       )}
     </div>
   );

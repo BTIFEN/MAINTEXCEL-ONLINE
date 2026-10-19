@@ -1,0 +1,42 @@
+name: Vérification
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installation des dépendances (figées)
+        run: bun install --frozen-lockfile
+      - name: Contrôle des types
+        run: bun run lint
+      - name: Tests de l'interface
+        run: bunx vitest run src
+      - name: Tests du serveur et des droits
+        run: npm run test:server
+      - name: Construction
+        run: bun run build
+      - name: Démarrage réel du serveur
+        run: |
+          MAINTEX_STORE=memory PORT=8099 MAINTEX_BOOTSTRAP_ADMINS=admin@aperam.com node server.js > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://localhost:8099/api/health && break; sleep 1; done
+          curl -fsS http://localhost:8099/api/health | grep '"ok":true'
+          curl -fsS http://localhost:8099/.well-known/jwks.json | grep '"kty":"RSA"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8099/api/auth/me)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X PUT http://localhost:8099/api/admin/roles/x)" = 403
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'X-Requested-With: maintex' http://localhost:8099/api/admin/roles/x)" = 401
+          curl -fsS http://localhost:8099/ | grep -q '<div id="root">'
+          cat server.log
+      - name: Construction de l'image Cloud Run
+        run: docker build -t maintex:ci .
