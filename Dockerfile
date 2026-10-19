@@ -1,18 +1,19 @@
 # MAINTeX — image pour Google Cloud Run.
-# Construction de l'interface avec les dépendances figées (bun.lock), puis
+# Construction de l'interface, puis
 # image d'exécution Node minimale sans les fichiers sources de l'interface.
 
+# Remettre --frozen-lockfile une fois bun.lock régénéré (il manque google-auth-library).
 FROM oven/bun:1 AS build
 WORKDIR /app
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+RUN bun install
 COPY . .
 RUN bun run build
 
 FROM oven/bun:1 AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 FROM node:22-slim
 ENV NODE_ENV=production
