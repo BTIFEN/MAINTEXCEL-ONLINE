@@ -57,3 +57,48 @@ test('matrice : poser puis remettre « hérité » nettoie les règles', () => {
   rules = setAppValue(rules, '5s', 'inherit');
   assert.deepEqual(rules, {});
 });
+
+/**
+ * Agrandissement de l'affichage.
+ *
+ * Posé sur la racine du document, il vaut pour tout le shell et pour le
+ * contenu des applications intégrées. Reste à garantir qu'il ne sort jamais
+ * de ses bornes, quoi qu'on lui donne.
+ */
+import {
+  ZOOM_DEFAULT,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  canZoomIn,
+  canZoomOut,
+  clampZoom,
+  zoomIn,
+  zoomLabel,
+  zoomOut,
+} from '../../src/shell/zoom.ts';
+
+test('l’agrandissement reste dans ses bornes', () => {
+  assert.equal(clampZoom(5), ZOOM_MAX);
+  assert.equal(clampZoom(0.1), ZOOM_MIN);
+  assert.equal(clampZoom(1), ZOOM_DEFAULT);
+  // Une valeur illisible dans le stockage ne doit pas casser l'affichage.
+  assert.equal(clampZoom(Number('abc')), ZOOM_DEFAULT);
+  assert.equal(clampZoom(Infinity), ZOOM_DEFAULT);
+});
+
+test('les boutons s’arrêtent aux extrêmes au lieu de dériver', () => {
+  let value = ZOOM_DEFAULT;
+  for (let i = 0; i < 50; i += 1) value = zoomIn(value);
+  assert.equal(value, ZOOM_MAX);
+  assert.equal(canZoomIn(value), false);
+
+  for (let i = 0; i < 50; i += 1) value = zoomOut(value);
+  assert.equal(value, ZOOM_MIN);
+  assert.equal(canZoomOut(value), false);
+});
+
+test('un aller-retour revient exactement à la taille de départ', () => {
+  assert.equal(zoomOut(zoomIn(ZOOM_DEFAULT)), ZOOM_DEFAULT);
+  assert.equal(zoomLabel(ZOOM_DEFAULT), '100 %');
+  assert.equal(zoomLabel(1.2), '120 %');
+});

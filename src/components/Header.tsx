@@ -4,13 +4,16 @@ import {
   ChevronDown,
   ClipboardCheck,
   MessageCircle,
+  Minus,
   Phone,
+  Plus,
   Wrench,
   Users,
   LayoutGrid,
   LogOut,
   Shield
 } from 'lucide-react';
+import { canZoomIn, canZoomOut, zoomLabel } from '../shell/zoom';
 
 // Contact du responsable de la plateforme, affiché dans le bandeau.
 // Le format international est le seul que WhatsApp accepte dans un lien.
@@ -40,6 +43,11 @@ interface HeaderProps {
   /** Applications branchées et autorisées pour la personne connectée. */
   quickAccess?: QuickAccessEntry[];
   onQuickAccess?: (entry: QuickAccessEntry) => void;
+  /** Agrandissement courant de l'affichage (1 = taille normale). */
+  zoom?: number;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onZoomReset?: () => void;
   /** Application actuellement ouverte, mise en évidence dans le bandeau. */
   activeAppId?: string;
 }
@@ -115,6 +123,10 @@ export default function Header({
   quickAccess = [],
   onQuickAccess,
   activeAppId,
+  zoom = 1,
+  onZoomIn,
+  onZoomOut,
+  onZoomReset,
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -210,6 +222,54 @@ export default function Header({
       {/* Right: Notifications alert bell & User Profile exactly matching image */}
       <div className="flex items-center gap-4.5">
         
+        {/* Agrandissement de l'affichage : s'applique à tout l'écran,
+            y compris à l'intérieur des applications intégrées. */}
+        {(onZoomIn || onZoomOut) && (
+          <div
+            className="hidden md:flex items-center gap-0.5 rounded-full bg-slate-100/80 px-1 py-1"
+            role="group"
+            aria-label="Taille de l’affichage"
+          >
+            <button
+              type="button"
+              onClick={onZoomOut}
+              disabled={!canZoomOut(zoom)}
+              aria-label="Réduire la taille de l’affichage"
+              title="Réduire (A−)"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-35 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+            >
+              <span className="flex items-baseline font-extrabold leading-none">
+                <span className="text-[11px]">A</span>
+                <Minus className="w-2.5 h-2.5" strokeWidth="4" />
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onZoomReset}
+              aria-label="Revenir à la taille normale"
+              title="Revenir à 100 %"
+              className="px-1.5 text-[10px] font-extrabold text-slate-500 tabular-nums hover:text-slate-900 transition-colors min-w-[42px]"
+            >
+              {zoomLabel(zoom)}
+            </button>
+
+            <button
+              type="button"
+              onClick={onZoomIn}
+              disabled={!canZoomIn(zoom)}
+              aria-label="Agrandir la taille de l’affichage"
+              title="Agrandir (A+)"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-35 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+            >
+              <span className="flex items-baseline font-extrabold leading-none">
+                <span className="text-[13px]">A</span>
+                <Plus className="w-2.5 h-2.5" strokeWidth="4" />
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* Notification Bell with red rounded badge showing 3 */}
         <div className="relative">
           <button 
