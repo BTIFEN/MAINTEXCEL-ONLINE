@@ -93,6 +93,19 @@ test('sans la variable, rien ne change : la connexion reste exigée', async () =
   assert.equal(config.body.demo, false);
 });
 
+test('hors démonstration, l’administration répond normalement', async () => {
+  // Le garde du mode démonstration laisse passer en appelant `next()`. Enveloppé
+  // dans `route()`, qui ne transmet que (req, res), cet appel levait une
+  // exception et toute l'administration renvoyait 500. Les autres tests ne le
+  // voyaient pas : ils allument tous le mode démonstration, donc le garde
+  // refusait avant d'arriver au `next()`.
+  const app = await plateforme();
+  const roles = await appeler(app, 'GET', '/api/admin/roles');
+  assert.notEqual(roles.status, 500, 'le garde ne doit pas casser la route');
+  assert.notEqual(roles.body?.error, 'INTERNAL_ERROR');
+  assert.equal(roles.status, 401, 'sans session, c’est un refus d’authentification');
+});
+
 test('une adresse de démonstration inconnue n’ouvre aucune porte', async () => {
   const app = await plateforme({ demoEmail: 'personne@exemple.be' });
   const moi = await appeler(app, 'GET', '/api/auth/me');
