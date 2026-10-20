@@ -70,6 +70,9 @@ const app = createApp({
   signing,
   config: {
     googleClientId: env.MAINTEX_GOOGLE_CLIENT_ID || '',
+    // Mode démonstration : identité empruntée par tout visiteur non connecté.
+    demoEmail: env.MAINTEX_DEMO_EMAIL || '',
+    demoName: env.MAINTEX_DEMO_NAME || '',
     sessionSecret: env.MAINTEX_SESSION_SECRET || '',
     publicUrl: (env.MAINTEX_PUBLIC_URL || env.APP_URL || `http://localhost:${port}`).replace(/\/$/, ''),
     appUrls: readAppUrls(),

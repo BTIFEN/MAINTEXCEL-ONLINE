@@ -2,17 +2,25 @@
 # Construction de l'interface, puis
 # image d'exécution Node minimale sans les fichiers sources de l'interface.
 
-# Remettre --frozen-lockfile une fois bun.lock régénéré (il manque google-auth-library).
+# bun.lock est périmé : google-auth-library y manque. Depuis bun 1.4, une
+# installation refuse un verrou qui ne correspond pas au package.json, et la
+# construction s'arrête. Plutôt que de dépendre d'un drapeau dont le nom change
+# d'une version de bun à l'autre, on ne copie PAS le verrou dans l'image :
+# sans verrou, il n'y a rien à geler, et bun résout depuis package.json.
+#
+# Contrepartie assumée : la construction n'est plus reproductible au paquet
+# près. Elle ne l'était déjà plus, puisque le verrou était ignoré. À rétablir
+# — copie du verrou ET gel — le jour où bun.lock sera régénéré.
 FROM oven/bun:1 AS build
 WORKDIR /app
-COPY package.json bun.lock ./
+COPY package.json ./
 RUN bun install
 COPY . .
 RUN bun run build
 
 FROM oven/bun:1 AS deps
 WORKDIR /app
-COPY package.json bun.lock ./
+COPY package.json ./
 RUN bun install --production
 
 FROM node:22-slim

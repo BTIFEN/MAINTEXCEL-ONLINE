@@ -82,6 +82,8 @@ export interface ShellSession {
   user: ShellUser;
   access: EffectiveAccess;
   apps: ShellApp[];
+  /** Vrai quand la personne entre par le mode démonstration, sans s'être connectée. */
+  demo?: boolean;
 }
 
 export interface AuditEntry {

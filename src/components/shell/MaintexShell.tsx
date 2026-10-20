@@ -258,12 +258,12 @@ export default function MaintexShell() {
           onHome={handleHome}
           userName={session.user.name}
           roleLabel={session.user.roleLabel}
-          isAdmin={session.access.isAdmin}
+          isAdmin={session.access.isAdmin && !session.demo}
           onAdmin={() => {
             setNotice('');
             setView({ kind: 'admin' });
           }}
-          onLogout={logout}
+          onLogout={session.demo ? undefined : logout}
           quickAccess={quickAccess}
           activeAppId={activeAppId}
           zoom={zoom}
@@ -273,6 +273,15 @@ export default function MaintexShell() {
           onQuickAccess={(entry) => handleNavigate(entry.moduleId, entry.label, undefined, entry.subtitle)}
         />
       </div>
+
+      {session.demo && (
+        <p className="bg-amber-100 text-amber-900 px-6 py-2 text-sm font-semibold flex items-center justify-center gap-2 text-center">
+          <span className="font-extrabold uppercase tracking-wider text-[11px] bg-amber-900 text-amber-50 px-2 py-0.5 rounded">
+            Démonstration
+          </span>
+          Accès libre, sans connexion — données fictives. Aucune information réelle n’est présentée ici.
+        </p>
+      )}
 
       {notice && (
         <p role="alert" className="bg-rose-100 text-rose-800 px-6 py-2 text-sm font-semibold">
