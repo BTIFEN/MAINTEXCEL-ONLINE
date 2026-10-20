@@ -201,13 +201,17 @@ export function createApp({ service, config, signing, verifyGoogleToken, log = c
     res.json({ keys: signing ? [signing.jwk] : [] });
   });
 
-  app.use('/api/admin', route(async (req, res, next) => {
+  // Porte d'entrée de l'administration : un intergiciel ordinaire, pas une
+  // route. `route()` n'appelle son gestionnaire qu'avec (req, res) : enveloppé
+  // dedans, `next` valait `undefined` et toute l'administration répondait 500
+  // dès que le mode démonstration était éteint — c'est-à-dire en temps normal.
+  app.use('/api/admin', (req, res, next) => {
     if (isDemoVisitor(req)) {
       res.status(403).json({ error: 'DEMO_READ_ONLY', message: 'Zone d’administration fermée en mode démonstration.' });
       return;
     }
     next();
-  }));
+  });
 
   app.post('/api/apps/:appId/token', route(async (req, res) => {
     const profile = await currentProfile(req);
